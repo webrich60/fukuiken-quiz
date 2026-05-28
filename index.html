@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- SEO最適化 -->
+    <title>福井県民ショー - ご当地愛テスト</title>
+    <meta name="description" content="福井のグルメ、観光、歴史、方言、イベントに関する激ムズご当地クイズアプリ。真の県民テストに挑戦して、あなたの「地元愛」を証明しよう！">
+    <meta name="keywords" content="福井県民ショー,クイズ,激ムズ,ご当地,観光,歴史,方言,テスト,暇つぶし">
+    <meta name="author" content="福井県民ショー">
+    <meta name="robots" content="index, follow">
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* アニメーションと基本設定 */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            overflow-x: hidden; /* 横スクロールを防ぐ */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        /* ◯❌マークのアニメーション */
+        @keyframes markPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            40% { transform: scale(1.2); opacity: 1; }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-mark-pop {
+            animation: markPop 1s ease-out forwards;
+        }
+
+        /* ご当地キャラひょっこりアニメーション1 */
+        @keyframes rightPop {
+            0%, 40%, 100% { transform: translate(100%, 100%) rotate(20deg); }
+            10% { transform: translate(-10%, -40%) rotate(-10deg); } 
+            20% { transform: translate(-10%, -30%) rotate(-5deg); }  
+            30% { transform: translate(-10%, -40%) rotate(-10deg); }
+        }
+        .animate-right-pop {
+            animation: rightPop 7s ease-in-out infinite;
+        }
+
+        /* ご当地キャラひょっこりアニメーション2 */
+        @keyframes leftPop {
+            0%, 40%, 100% { transform: translate(-100%, 100%) rotate(-20deg); }
+            10% { transform: translate(10%, -40%) rotate(10deg); } 
+            20% { transform: translate(10%, -30%) rotate(5deg); }
+            30% { transform: translate(10%, -40%) rotate(10deg); }
+        }
+        .animate-left-pop {
+            animation: leftPop 9s ease-in-out infinite;
+        }
+
+        /* ボタン等のタップハイライトを消す */
+        * { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="h-[100dvh] bg-slate-50 text-slate-800 flex flex-col font-sans relative overflow-hidden">
+
+    <!-- ソースコード保護・不正操作防止用スクリプト -->
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+
+    <!-- ◯❌アニメーション表示用オーバーレイ -->
+    <div id="mark-overlay" class="fixed inset-0 z-50 pointer-events-none hidden items-center justify-center bg-white/30 backdrop-blur-sm"></div>
+
+    <!-- 演出用レイヤー（JSで表示切替） -->
+    <div id="effect-layer" class="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+        <!-- 左下から飛び出すキャラ -->
+        <div class="absolute bottom-[70px] md:bottom-[90px] -left-4 text-[6rem] md:text-[10rem] animate-left-pop drop-shadow-xl origin-bottom-left">
+            <div class="relative inline-block">
+                🦀
+                <!-- 演出タグ（デモ用） -->
+                <div class="absolute top-[35%] right-[2%] bg-yellow-400 text-slate-800 text-[0.12em] font-black px-[0.3em] py-[0.2em] border-[0.02em] border-yellow-600 rounded-[0.1em] shadow-sm rotate-[15deg] leading-none whitespace-nowrap tracking-tighter">
+                    ご当地
+                </div>
+            </div>
+        </div>
+        <!-- 右下から飛び出すキャラ -->
+        <div class="absolute bottom-[70px] md:bottom-[90px] -right-4 text-[6rem] md:text-[10rem] animate-right-pop drop-shadow-xl origin-bottom-right">
+            🦖
+        </div>
+    </div>
+
+    <!-- 広告枠（上部）: JSで動的に表示 -->
+    <div id="ad-top-wrapper" class="w-full bg-white border-b border-slate-200 py-2 px-4 flex justify-center shadow-sm z-40 shrink-0 hidden">
+        <div id="ad-top-container" class="w-full max-w-3xl flex justify-center items-center">
+            <!-- 広告がここに入る -->
+        </div>
+    </div>
+
+    <!-- アプリメインコンテンツ描画エリア: ここだけがスクロールする -->
+    <main id="app-root" class="flex-1 flex flex-col w-full z-10 relative overflow-y-auto"></main>
+
+    <!-- 広告枠（下部）: JSで動的に表示 -->
+    <div id="ad-bottom-wrapper" class="w-full bg-white border-t border-slate-200 py-2 px-4 flex justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 shrink-0 mt-auto hidden">
+        <div id="ad-bottom-container" class="w-full max-w-3xl flex justify-center items-center">
+            <!-- 広告がここに入る -->
+        </div>
+    </div>
+
+    <!-- アプリケーションロジック -->
+    <script>
+        // サウンド再生の準備（Web Audio API）
+        let audioCtx;
+        let isAudioInitialized = false;
+
+        function initAudio() {
+            if (isAudioInitialized) return;
+            try {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                gain.gain.value = 0;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.01);
+                isAudioInitialized = true;
+            } catch (e) {
+                console.log("Web Audio API not supported");
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'correct') {
+                // ピンポン♪（正解音）
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1); // C6
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } else {
+                // ブッブー（不正解音）
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(120, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // ◯❌アニメーション表示
+        function showMark(isCorrect) {
+            const markContainer = document.getElementById('mark-overlay');
+            if (!markContainer) return;
+            
+            markContainer.innerHTML = isCorrect 
+                ? '<div class="text-red-500 text-[15rem] md:text-[20rem] leading-none font-bold animate-mark-pop drop-shadow-xl">◯</div>'
+                : '<div class="text-blue-600 text-[15rem] md:text-[20rem] leading-none font-bold animate-mark-pop drop-shadow-xl">❌</div>';
+            
+            markContainer.classList.remove('hidden');
+            markContainer.classList.add('flex');
+            
+            // 1秒後に非表示
+            setTimeout(() => {
+                markContainer.classList.add('hidden');
+                markContainer.classList.remove('flex');
+                markContainer.innerHTML = '';
+            }, 1000);
+        }
+
+        // SVGアイコンデータ
+        const ICONS = {
+            Map: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>`,
+            BookOpen: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`,
+            MessageCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
+            Utensils: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`,
+            Calendar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+            Sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>`,
+            Flame: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`,
+            RefreshCw: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`,
+            ChevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+            Trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>`,
+            Leaf: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>`,
+            User: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+            Award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>`,
+            Link: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
+            Mail: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>`,
+            ExternalLink: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
+            Send: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
+            Settings: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+            AlertTriangle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+        };
+
+        // クイズデータ（※現在は福井県データがデモとして入っています。今後は全国版に拡張可能です）
+        const QUIZ_DATA = [
+            // グルメ
+            { id: 'g1', category: 'グルメ', question: '毎年11月6日に漁が解禁される、福井県を代表する冬の味覚の王様と呼ばれるオスのズワイガニのブランド名は何でしょう？', options: ['越前がに', '松葉がに', '間人がに', 'タラバガニ'], answer: '越前がに', explanation: '福井県で水揚げされるオスのズワイガニを「越前がに」と呼びます。全国で唯一、皇室に献上されているカニとしても有名です。' },
+            { id: 'g2', category: 'グルメ', question: '越前がにの中でも、重さ1.3kg以上・甲羅幅14.5cm以上などの厳しい基準を満たした最高級ブランドに与えられる称号は何でしょう？', options: ['極（きわみ）', '皇（すめらぎ）', '匠（たくみ）', '頂（いただき）'], answer: '極（きわみ）', explanation: '重さ、甲羅の大きさ、爪の太さなど極めて厳しい基準をクリアしたトップブランド。全体の水揚げ量のわずか0.5%未満しか獲れない幻のカニです。' },
+            { id: 'g3', category: 'グルメ', question: '福井県で「せいこがに」と呼ばれ、内子や外子と呼ばれる卵が美味しいことで知られるカニは何でしょう？', options: ['メスのズワイガニ', 'オスのズワイガニ', '毛ガニ', 'ワタリガニ'], answer: 'メスのズワイガニ', explanation: 'メスのズワイガニを福井では「せいこがに」と呼びます。オスより小さいですが、甲羅の中にある濃厚な内子（未受精卵）とプチプチした外子が絶品です。' },
+            { id: 'g4', category: 'グルメ', question: '福井県内で水揚げされた本物の越前がにの証として、カニの脚に取り付けられるタグの色は何色でしょう？', options: ['黄色', '赤色', '青色', '緑色'], answer: '黄色', explanation: '本物の証として黄色いタグが付けられます。このタグには水揚げされた港の名前が記されており、産地証明タグの全国的な先駆けとなりました。' },
+            { id: 'g5', category: 'グルメ', question: '2月下旬から3月にかけての約1ヶ月間だけ漁が解禁される、脱皮したてのズワイガニを福井では何と呼ぶでしょう？', options: ['ズボガニ（水ガニ）', 'ベニズワイガニ', 'タカアシガニ', 'イチョウガニ'], answer: 'ズボガニ（水ガニ）', explanation: '脱皮して間もないカニで、殻から身が「ズボッ」と簡単に抜けることからその名が付きました。瑞々しく甘みが強いのが特徴です。' },
+            { id: 'g6', category: 'グルメ', question: '黒っぽく太めの蕎麦に、大根おろし、ネギ、かつお節をのせ、ダシをかけて食べる福井名物の蕎麦は何でしょう？', options: ['越前おろしそば', '十割そば', '信州そば', 'わんこそば'], answer: '越前おろしそば', explanation: '冷たい蕎麦にピリッと辛い大根おろしをたっぷり乗せて食べる、福井の郷土料理。昭和天皇が福井を訪れた際におかわりし、後年「越前のそばは…」と懐かしんだことからその名が定着しました。' },
+            { id: 'g7', category: 'グルメ', question: '越前市（武生）周辺の食堂などで提供されている、ラーメンのスープに蕎麦つゆの“かえし”を使っている麺料理は何でしょう？', options: ['たけふ駅前中華そば', '敦賀ラーメン', '越前ラーメン', '武生そば'], answer: 'たけふ駅前中華そば', explanation: '蕎麦屋さん発祥のラーメンで、和風だしの効いた透き通ったスープが特徴。地元で長く愛されているソウルフードです。' },
+            { id: 'g8', category: 'グルメ', question: '福井県で「カツ丼」と注文すると一般的に出てくる、ウスターソースベースのタレにくぐらせたカツがのった丼は何でしょう？', options: ['ソースカツ丼', '醤油カツ丼', '卵とじカツ丼', '味噌カツ丼'], answer: 'ソースカツ丼', explanation: '福井でカツ丼といえばソースカツ丼。薄切りの豚肉をきめ細かいパン粉でカラッと揚げ、熱々のうちに特製ソースにくぐらせてご飯に乗せます。' },
+            { id: 'g9', category: 'グルメ', question: 'ソースカツ丼の発祥のお店とされ、福井県内で愛されている老舗洋食店の名前は何でしょう？', options: ['ヨーロッパ軒', 'アメリカ軒', 'アジア軒', 'ロシア軒'], answer: 'ヨーロッパ軒', explanation: '大正2年創業の老舗。創業者である高畠増太郎がドイツでの料理修業を経て考案したと言われており、福井県内に多数ののれん分け店があります。' },
+            { id: 'g10', category: 'グルメ', question: '越前市（武生）のご当地グルメで、オムライスの上にトンカツをのせ、デミグラスソースなどをかけた料理は何でしょう？', options: ['ボルガライス', 'ハヤシライス', 'オムカツ', 'サバエドッグ'], answer: 'ボルガライス', explanation: 'オムライスの上にカツを乗せ、お店独自のソース（デミグラスやトマトベースなど）をかけたボリューム満点の料理。名前の由来はロシアのボルガ川など諸説あります。' },
+
+            // 観光
+            { id: 't1', category: '観光', question: '北陸最大級のドームプラネタリウムや大型の恐竜遊具がある、坂井市の児童科学館の愛称は何でしょう？', options: ['エンゼルランドふくい', 'サイエンスヒルズこまつ', 'こども家族館', 'ワンダーランド'], answer: 'エンゼルランドふくい', explanation: '正式名称は「福井県児童科学館」。宇宙飛行士の毛利衛さんが名誉館長を務めており、屋内外で一日中遊べる施設です。' },
+            { id: 't2', category: '観光', question: 'ツツジの名所として知られ、レッサーパンダがいる動物園も併設されている鯖江市の公園はどこでしょう？', options: ['西山公園', '足羽山公園', 'きのこの森', '芝政ワールド'], answer: '西山公園', explanation: '約5万株のつつじが咲き誇る名所。併設の西山動物園はレッサーパンダの繁殖で全国的に有名で、しかも無料で入園できます。' },
+            { id: 't3', category: '観光', question: '約7万年の歴史を測ることができる「年縞（てんこう）」を展示している若狭町の博物館はどこでしょう？', options: ['年縞博物館', '恐竜博物館', '歴史博物館', '海浜自然センター'], answer: '年縞博物館', explanation: '三方五湖の一つ「水月湖」の湖底に7万年にわたって奇跡的に積もった縞模様の地層「年縞」を展示しており、世界の年代測定の標準（ものさし）となっています。' },
+            { id: 't4', category: '観光', question: '春には約1万1000株のアジサイが咲き誇り、遊園地や動物園もある福井市中心部の公園はどこでしょう？', options: ['足羽山公園', '西山公園', '霞ヶ城公園', 'ゆりの里公園'], answer: '足羽山公園', explanation: '春には桜やアジサイが美しく、アスレチックやミニ動物園もある市民の憩いの場。山上には継体天皇像も建っています。' },
+            { id: 't5', category: '観光', question: '日本海に突き出た岩場で、夕日の絶景スポットとしても知られる福井市の海岸景勝地はどこでしょう？', options: ['鉾島', '東尋坊', '呼鳥門', '越前岬'], answer: '鉾島', explanation: '柱状節理の岩場が日本海に突き出た高さ約50mの小島で、遊歩道が整備されており頂上の松の木まで登ることができます。' },
+            { id: 't6', category: '観光', question: '恐竜の化石発掘で知られ、世界有数規模を誇る勝山市の博物館はどこでしょう？', options: ['福井県立恐竜博物館', '年縞博物館', '越前がにミュージアム', '海浜自然センター'], answer: '福井県立恐竜博物館', explanation: '勝山市は日本最大の恐竜化石発掘地。博物館は銀色の卵のようなドーム型の外観が特徴的で、50体以上の恐竜骨格が展示されています。' },
+            { id: 't7', category: '観光', question: '柱状節理の断崖絶壁が約1km続く、坂井市を代表する景勝地はどこでしょう？', options: ['東尋坊', '鉾島', '越前岬', '呼鳥門'], answer: '東尋坊', explanation: '世界に3カ所しかないと言われる大規模な輝石安山岩の柱状節理の絶壁が続きます。サスペンスドラマのロケ地としても有名です。' },
+            { id: 't8', category: '観光', question: '1244年に道元禅師によって開かれた曹洞宗の大本山で、多くの修行僧が修行に励む寺院はどこでしょう？', options: ['大本山永平寺', '氣比神宮', '劔神社', '白山平泉寺'], answer: '大本山永平寺', explanation: '道元禅師が開創した曹洞宗の厳しい修行道場。現在も多くの雲水（修行僧）が日夜修行に励んでおり、荘厳な空気が漂います。' },
+            { id: 't9', category: '観光', question: '三方五湖や若狭湾を360度のパノラマビューで楽しめる山頂の公園はどこでしょう？', options: ['レインボーライン山頂公園', '西山公園', '足羽山公園', '東尋坊タワー'], answer: 'レインボーライン山頂公園', explanation: 'リフトやケーブルカーで登る山頂からは、水質の違いから色が異なる三方五湖と若狭湾の絶景を一度に楽しむことができます。' },
+            { id: 't10', category: '観光', question: 'イルカショーやペンギンの散歩が楽しめ、「みて、ふれて、楽しく学べる」がテーマの坂井市の水族館はどこでしょう？', options: ['越前松島水族館', 'くにみクラゲ公民館', 'のとじま水族館', '越前がにミュージアム'], answer: '越前松島水族館', explanation: '体験・体感型の水族館。海の生き物に直接触れたり、ガラス張りの床の上に乗れる「さんごの海」水槽がSNS等で人気です。' },
+
+            // 歴史
+            { id: 'h1', category: '歴史', question: '越前藩主松平家の別邸であった、福井市にある名勝指定の庭園はどこでしょう？', options: ['名勝 養浩館庭園', '兼六園', '後楽園', '玄宮園'], answer: '名勝 養浩館庭園', explanation: '江戸時代初期の回遊式林泉庭園で、かつては「御泉水屋敷」と呼ばれていました。アメリカの日本庭園ランキングでも常に上位に入ります。' },
+            { id: 'h2', category: '歴史', question: '日本三大木造大鳥居を擁し、北陸道総鎮守として知られる敦賀市の神社はどこでしょう？', options: ['氣比神宮', '劔神社', '白山平泉寺', '神明神社'], answer: '氣比神宮', explanation: '地元では「けひさん」として親しまれ、高さ10.9mの大鳥居は春日大社、厳島神社と並ぶ日本三大木造大鳥居の一つです。' },
+            { id: 'h3', category: '歴史', question: '戦国時代、織田信長に滅ぼされるまで約100年間にわたり越前を支配した戦国大名の城下町跡は何でしょう？', options: ['一乗谷朝倉氏遺跡', '丸岡城', '北ノ庄城', '大野城'], answer: '一乗谷朝倉氏遺跡', explanation: '戦国大名朝倉氏の城下町跡。発掘調査により町並みが復原されており、国の特別史跡・特別名勝・重要文化財の三重指定を受けています。' },
+            { id: 'h4', category: '歴史', question: '現存する日本最古の天守閣を持つとされる、坂井市にあるお城はどこでしょう？', options: ['丸岡城', '彦根城', '犬山城', '松本城'], answer: '丸岡城', explanation: '全国に12しかない現存天守の一つ。屋根には寒冷地特有の笏谷石（しゃくだにいし）で作られた石瓦が葺かれている珍しいお城です。' },
+            { id: 'h5', category: '歴史', question: '福井という地名の由来となったとされる「福の井」という井戸が残る城跡はどこでしょう？', options: ['福井城跡', '北ノ庄城跡', '大野城跡', '丸岡城跡'], answer: '福井城跡', explanation: '初代福井藩主の結城秀康によって築かれました。「福の井」は県庁の敷地内となっている城跡の天守台のそばに現在も残っています。' },
+            { id: 'h6', category: '歴史', question: '織田信長の命により越前国を平定した後、北庄に城と城下町を築き、現在の福井市の基礎を作った武将は誰でしょう？', options: ['柴田勝家', '織田信長', '朝倉義景', '結城秀康'], answer: '柴田勝家', explanation: '織田信長の筆頭家老で、お市の方を正室に迎えました。彼が築いた北ノ庄城は9層の壮大な天守があったと伝えられています。' },
+            { id: 'h7', category: '歴史', question: '大野市の象徴であり、雲海に包まれて浮かんで見えることから「天空の城」と呼ばれる城はどこでしょう？', options: ['越前大野城', '丸岡城', '北ノ庄城', '敦賀城'], answer: '越前大野城', explanation: '大野盆地にある亀山（標高約249m）に築かれた城で、秋から春にかけての早朝、条件が揃うと雲海に浮かぶ幻想的な姿が見られます。' },
+            { id: 'h8', category: '歴史', question: '若狭と京都を結び、海産物や様々な物資、文化を運んだ街道群は、運ばれた代表的な魚の名前から何と呼ばれているでしょう？', options: ['鯖街道', '塩街道', '絹街道', '北陸道'], answer: '鯖街道', explanation: '若狭湾の海産物を京都に運んだ道。特に「鯖」が塩漬けにされて大量に運ばれたことからこの名が付き、京の食文化を支えました。' },
+            { id: 'h9', category: '歴史', question: '1180年頃に現在の越前町小曽原で生産が始まったとされ、日本六古窯の一つにも数えられる焼き物は何でしょう？', options: ['越前焼', '九谷焼', '珠洲焼', '備前焼'], answer: '越前焼', explanation: '平安時代末期から続く焼き物で、釉薬を使わず高温で焼き締めることで、土に含まれる鉄分が表面に溶け出す素朴な風合いが特徴です。' },
+            { id: 'h10', category: '歴史', question: '幕末の福井藩第16代藩主で、藩政改革を行い、明治維新に大きな影響を与えた名君は誰でしょう？', options: ['松平春嶽', '橋本左内', '由利公正', '結城秀康'], answer: '松平春嶽', explanation: '幕末の四賢侯の一人。橋本左内や由利公正らを登用して藩政改革を行い、将軍継嗣問題など幕末の政局で極めて重要な役割を果たしました。' },
+
+            // 方言
+            { id: 'd1', category: '方言', question: '福井弁で「テレビの画面が乱れている状態」を何と言うでしょう？', options: ['じゃみじゃみ', 'ちかちか', 'ざらざら', 'ばちばち'], answer: 'じゃみじゃみ', explanation: 'アナログテレビ時代の砂嵐画面のこと。「今日のテレビ、じゃみじゃみやの〜」のように使います。' },
+            { id: 'd2', category: '方言', question: '「正座しなさい」という意味で、子供のしつけなどでよく使われる愛らしい響きの福井弁は何でしょう？', options: ['おちょきん', 'おちゃんこ', 'おすわり', 'おちんちん'], answer: 'おちょきん', explanation: '保育園や学校の先生が「はい、みんなおちょきんして！」とよく使います。県民には馴染み深い言葉です。' },
+            { id: 'd3', category: '方言', question: 'コップなどに水が溢れそうなほどギリギリまで入っている状態を、福井弁で何と言うでしょう？', options: ['つるつるいっぱい', 'なみなみ', 'ぎりぎりいっぱい', 'すれすれ'], answer: 'つるつるいっぱい', explanation: '表面張力ギリギリまで水が入っている様子。福井県民はこれを標準語だと信じて疑わないことが多いです。' },
+            { id: 'd4', category: '方言', question: '「そうそう」「その通り」と相槌を打つ時によく使われる福井弁の言葉は何でしょう？', options: ['ほやほや', 'んだんだ', 'だらだら', 'せやせや'], answer: 'ほやほや', explanation: '「そうそう」という同意の相槌。福井弁を代表する言葉の一つで、連続して「ほやほやほや」と言うこともあります。' },
+            { id: 'd5', category: '方言', question: '「とても」「すごく」という意味で、「〇〇おいしい」のように強調する際に使われる福井弁は何でしょう？', options: ['ひっで', 'でれっ', 'ばり', 'ぶち'], answer: 'ひっで', explanation: '「とても」「ひどく」という意味。「ひっでおいしい（すごくおいしい）」「ひっで疲れた」のように強調として使います。' },
+            { id: 'd6', category: '方言', question: '「早くしなさい」という意味ですが、他県の人が聞くと「早く死んで」と勘違いして驚いてしまう福井弁は何でしょう？', options: ['はよしね', 'はよきて', 'はよして', 'はよかえれ'], answer: 'はよしね', explanation: '「しね」は「する」の命令形「せよ」が変化したもので、決して悪口ではありませんが、他県の人はギョッとします。' },
+            { id: 'd7', category: '方言', question: '「疲れた」という意味で使われますが、標準語の「安心する」とは意味が異なる福井弁は何でしょう？', options: ['ほっこりする', 'しなーっと', 'てきねえ', 'おもっしぇえ'], answer: 'ほっこりする', explanation: '福井では「あー、疲れた（しんどい）」という意味で、一仕事終えた後などに「ほっこりしたわー」と使います。' },
+            { id: 'd8', category: '方言', question: '「いない」という意味の福井弁で、塩のことではない言葉は何でしょう？', options: ['えん', 'おらん', 'こん', 'みん'], answer: 'えん', explanation: '「（人が）いない」のこと。有名な福井弁の早口言葉に「だんね、えん、こん（構わない、いない、来ない）」があります。' },
+            { id: 'd9', category: '方言', question: '「ひどく散らかって収集がつかない状態」や「めちゃくちゃ」を意味する福井弁は何でしょう？', options: ['わやくそ', 'じゃみじゃみ', 'てきねえ', 'だわもん'], answer: 'わやくそ', explanation: '「めちゃくちゃ」「収集がつかない」状態。「部屋がわやくそや〜」「仕事がわやくそになった」のように使います。' },
+            { id: 'd10', category: '方言', question: '「私」「俺」と自分を指す一人称で、福井弁で男性がよく使う言葉は何でしょう？', options: ['うら', 'わい', 'おどん', 'おら'], answer: 'うら', explanation: '男性が使う一人称「俺」。複数形になると「うらら（俺たち）」になります。' },
+
+            // イベント
+            { id: 'f1', category: 'イベント', question: '毎年5月に開催され、巨大な武者人形の山車が町を練り歩く坂井市のお祭りは何でしょう？', options: ['三国祭', '敦賀まつり', '勝山左義長', 'おおの城まつり'], answer: '三国祭', explanation: '北陸三大祭りの一つ。高さ約6.5mの巨大な武者人形の山車（やま）が、狭い湊町の路地をギリギリで練り歩く迫力は圧巻です。' },
+            { id: 'f2', category: 'イベント', question: '毎年3月2日に行われ、奈良の東大寺二月堂へ香水を送る神事として知られる小浜市のお祭りは何でしょう？', options: ['お水送り', 'お水取り', '蓮如忌', '御船遊管絃祭'], answer: 'お水送り', explanation: '若狭の遠敷川から流した香水が、10日後に奈良の東大寺「お水取り」の若狭井に届くとされる、若狭と奈良を結ぶ歴史ある神事です。' },
+            { id: 'f3', category: 'イベント', question: '毎年2月に勝山市で行われ、色鮮やかな短冊で飾られた櫓の上で浮かれるように太鼓を叩く奇祭は何でしょう？', options: ['勝山左義長まつり', '敦賀まつり', '三国祭', '放生祭'], answer: '勝山左義長まつり', explanation: '街の各所に立てられた櫓の上で、赤い長襦袢を着た大人や子供が三味線や笛に合わせて浮かれるように太鼓を叩く、奥越の春を呼ぶお祭りです。' },
+            { id: 'f4', category: 'イベント', question: '毎年9月に開催され、氣比神宮の例大祭に合わせて山車が巡行する敦賀市のお祭りは何でしょう？', options: ['敦賀まつり', '三国祭', '総社大神宮大祭', 'フェニックスまつり'], answer: '敦賀まつり', explanation: '氣比神宮の例大祭に合わせて行われ、実物大の鎧兜を身につけた武者行列や勇壮な山車巡行が行われる敦賀最大のイベントです。' },
+            { id: 'f5', category: 'イベント', question: '桜の名所・金崎宮で春に行われ、桜の小枝を交換することで想いを伝えるロマンチックなお祭りは何でしょう？', options: ['花換まつり', '桜まつり', '恋まつり', '縁結びまつり'], answer: '花換まつり', explanation: '明治時代、金崎宮を訪れた男女が「花換えましょう」と声を掛け合い、桜の小枝を交換して想いを伝えたというロマンチックな風習が起源です。' },
+            { id: 'f6', category: 'イベント', question: '福井市で毎年8月に開催される、空襲や震災からの復興を願って始まった、花火大会などが目玉のイベントは何でしょう？', options: ['福井フェニックスまつり', 'おおの城まつり', 'あさひまつり', 'たけふ菊人形'], answer: '福井フェニックスまつり', explanation: '1945年の福井空襲、1948年の福井地震からの復興を願い、「不死鳥（フェニックス）」をシンボルに始まった福井市の夏の風物詩です。' },
+            { id: 'f7', category: 'イベント', question: '越前町で毎年7月に開催される、福井県内で最も早く行われ、越前漁港を舞台に打ち上げられる花火大会は何でしょう？', options: ['越前みなと大花火', '三国花火大会', 'とうろう流しと大花火大会', '若狭マリンピア花火大会'], answer: '越前みなと大花火', explanation: '福井県内の夏花火のトップを切って開催されます。漁港を舞台に打ち上げられ、海面に映る花火や山に反響する音が迫力満点です。' },
+            { id: 'f8', category: 'イベント', question: '越前市の武生中央公園で秋に開催される、約2万株の菊花と菊人形が展示される日本最大級の祭典は何でしょう？', options: ['たけふ菊人形', '鯖江つつじまつり', '越前和紙まつり', '今庄そばまつり'], answer: 'たけふ菊人形', explanation: '毎年テーマに合わせた色鮮やかな菊人形が展示されるほか、遊具やグルメも楽しめる一大イベント。OSK日本歌劇団の公演も名物です。' },
+            { id: 'f9', category: 'イベント', question: '小浜市で9月中旬に開催される若狭地方最大の秋祭りで、棒振り大太鼓や三匹獅子舞などが繰り出す祭礼は何でしょう？', options: ['放生祭', 'お水送り', '若狭おおいのスーパー大火勢', '敦賀まつり'], answer: '放生祭', explanation: '小浜市の八幡神社の例大祭。京都の祇園祭の影響を受けつつ、若狭の独自の歴史と文化が融合した華やかなお祭りで、県無形民俗文化財です。' },
+            { id: 'f10', category: 'イベント', question: '毎年11月に越前町などで開催される、水揚げされたばかりの越前がにの即売や海鮮グルメが味わえる福井県最大のカニの祭典は何でしょう？', options: ['越前かにまつり', '水仙まつり', '越前陶芸まつり', '海鮮まつり'], answer: '越前かにまつり', explanation: '越前がにの解禁に合わせて開催され、カニの即売会やアツアツのカニ汁、海鮮グルメなど、福井の冬の味覚を堪能できる大人気イベントです。' },
+
+            // 自然・地理
+            { id: 'n1', category: '自然・地理', question: '福井県の県花に指定されており、越前海岸で冬に咲き誇る花は何でしょう？', options: ['越前水仙', 'チューリップ', 'ひまわり', '梅'], answer: '越前水仙', explanation: '越前海岸は日本水仙の三大群生地の一つです。厳しい寒さの中で可憐に咲き、甘い香りを漂わせます。' },
+            { id: 'n2', category: '自然・地理', question: '嶺南地方にある、水質や塩分濃度が異なる5つの湖の総称は何でしょう？', options: ['三方五湖', '富士五湖', '知床五湖', '裏磐梯三湖'], answer: '三方五湖', explanation: '三方湖、水月湖、菅湖、久々子湖、日向湖の5つ。水質や水深の違いから、湖面が「五色の青」に見えると言われます。' },
+            { id: 'n3', category: '自然・地理', question: '福井県を流れる県内最大の河川で、サクラマスの釣れる川としても有名なのは何でしょう？', options: ['九頭竜川', '足羽川', '日野川', '北川'], answer: '九頭竜川', explanation: '福井県を代表する一級河川で、福井平野を潤しています。激しい流れが九つの頭を持つ竜のようだったことが名前の由来とされています。' },
+            { id: 'n4', category: '自然・地理', question: '福井県と石川県、岐阜県にまたがる、日本三名山の一つに数えられる山は何でしょう？', options: ['白山', '富士山', '立山', '荒島岳'], answer: '白山', explanation: '古くから信仰の山として知られ、富士山、立山と並ぶ日本三名山の一つです。福井県側からも多くの登山客が訪れます。' },
+            { id: 'n5', category: '自然・地理', question: '大野市にある、美しい星空が見えることで有名な高原は何でしょう？', options: ['六呂師高原', 'ひるがの高原', '清里高原', '蒜山高原'], answer: '六呂師高原', explanation: '環境省の全国星空継続観察で「日本一星空がきれい」と評価されたこともある、自然豊かな高原です。牧場や温泉もあります。' },
+            { id: 'n6', category: '自然・地理', question: '若狭湾国定公園に属し、透明度の高い美しい海と白い砂浜が特徴の海水浴場は何でしょう？', options: ['水晶浜', '三国サンセットビーチ', '鷹巣海水浴場', '若狭和田ビーチ'], answer: '水晶浜', explanation: 'その名の通り、水晶のようにきらめく白い砂粒が特徴です。日本の水浴場88選にも選ばれている関西屈指のビーチです。' },
+            { id: 'n7', category: '自然・地理', question: '福井県の県の鳥に指定されている鳥は何でしょう？', options: ['ツグミ', 'ライチョウ', 'キジ', 'オシドリ'], answer: 'ツグミ', explanation: '秋にシベリア方面から渡ってくる冬鳥です。かつて福井県内で多く見られたことから県の鳥に指定されました。' },
+            { id: 'n8', category: '自然・地理', question: '池田町にある、日本の滝100選にも選ばれた落差60mの美しい景観を持つ滝は何でしょう？', options: ['龍双ヶ滝', '一乗滝', '仏御前の滝', 'かずら橋の滝'], answer: '龍双ヶ滝', explanation: '岩肌を滑り落ちる水流が非常に美しく、龍が双（ふた）つ並んで昇っていくように見えることからその名が付きました。' },
+            { id: 'n9', category: '自然・地理', question: '福井県の木に指定されている、海岸沿いなどに多く自生する常緑針葉樹は何でしょう？', options: ['マツ', 'スギ', 'ヒノキ', 'ブナ'], answer: 'マツ', explanation: '気候風土に適し、古くから県民に親しまれてきたことから県の木に指定されています。気比の松原なども有名です。' },
+            { id: 'n10', category: '自然・地理', question: '若狭町にある、水温が年間を通じて13度前後と冷たく「瓜が割れるほど冷たい」ことから名付けられた湧水は何でしょう？', options: ['瓜割の滝', 'お清水', '弘法池', '雲城水'], answer: '瓜割の滝', explanation: '名水百選に選ばれており、周囲の森は神聖な空気に包まれています。夏でも涼しく、多くの人が涼を求めて訪れます。' }
+        ];
+
+        const CATEGORIES = [
+            { name: '観光', icon: 'Map', color: 'text-emerald-500', desc: '定番から穴場スポットまで' },
+            { name: '歴史', icon: 'BookOpen', color: 'text-amber-500', desc: 'ご当地のルーツを探る' },
+            { name: '方言', icon: 'MessageCircle', color: 'text-pink-500', desc: 'ディープな地元弁' },
+            { name: 'グルメ', icon: 'Utensils', color: 'text-orange-500', desc: '美味しいご当地' },
+            { name: 'イベント', icon: 'Calendar', color: 'text-purple-500', desc: '熱いお祭り騒ぎ' },
+            { name: '自然・地理', icon: 'Leaf', color: 'text-green-600', desc: '海・山・湖の絶景' }
+        ];
+
+        // 状態管理変数
+        let usedQuestionIds = new Set();
+        let currentQuiz = [];
+        let currentIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+        let isAnswered = false;
+        let quizConfig = { title: '', count: 0, type: '', category: null };
+        let errorMsg = '';
+        let wrongAnswers = []; 
+
+        // --- ユーザーデータ・ランキング管理（LocalStorage） ---
+        let currentUser = JSON.parse(localStorage.getItem('fukui_quiz_user')) || { nickname: '', prefecture: '' };
+        let localScores = JSON.parse(localStorage.getItem('fukui_quiz_scores')) || [];
+
+        // 47都道府県のリスト
+        const PREFECTURES = [
+            "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県", 
+            "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県", 
+            "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", 
+            "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県", 
+            "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県", 
+            "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県", 
+            "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
+        ];
+
+        // ダミーランキングデータ
+        const DUMMY_RANKING = [
+            { nickname: 'ご当地マイスター', prefecture: '福井県', score: 980 },
+            { nickname: 'クイズ博士', prefecture: '東京都', score: 850 },
+            { nickname: '旅行太郎', prefecture: '大阪府', score: 720 },
+            { nickname: '名産ハンター', prefecture: '愛知県', score: 640 },
+            { nickname: '全国をゆく', prefecture: '京都府', score: 550 },
+        ];
+
+        const appRoot = document.getElementById('app-root');
+
+        // --- カスタムリンクの初期化 ---
+        let customLinks = JSON.parse(localStorage.getItem('fukui_quiz_custom_links'));
+        if (!customLinks) {
+            customLinks = [
+                { title: 'ふくいドットコム', desc: '福井県公式観光サイト。最新の観光スポットやグルメ情報が満載。', url: 'https://www.fuku-e.com/' },
+                { title: '福井県立恐竜博物館', desc: '世界有数の規模を誇る恐竜博物館の公式サイト。', url: 'https://www.dinosaur.pref.fukui.jp/' },
+                { title: '福井県ホームページ', desc: '福井県の県政情報や生活に役立つ情報はこちら。', url: 'https://www.pref.fukui.lg.jp/' },
+                { title: '福井市観光公式サイト', desc: '福井市の観光、イベント、グルメ情報。', url: 'https://fukuikanko.jp/' }
+            ];
+            localStorage.setItem('fukui_quiz_custom_links', JSON.stringify(customLinks));
+        }
+
+        // --- 広告読み込み処理 ---
+        function loadAds() {
+            const topAd = localStorage.getItem('fukui_quiz_ad_top');
+            const bottomAd = localStorage.getItem('fukui_quiz_ad_bottom');
+            
+            const topWrapper = document.getElementById('ad-top-wrapper');
+            const topContainer = document.getElementById('ad-top-container');
+            const bottomWrapper = document.getElementById('ad-bottom-wrapper');
+            const bottomContainer = document.getElementById('ad-bottom-container');
+
+            if (topAd && topAd.trim() !== '') {
+                topContainer.innerHTML = topAd;
+                topWrapper.classList.remove('hidden');
+            } else {
+                topWrapper.classList.add('hidden');
+            }
+
+            if (bottomAd && bottomAd.trim() !== '') {
+                bottomContainer.innerHTML = bottomAd;
+                bottomWrapper.classList.remove('hidden');
+            } else {
+                bottomWrapper.classList.add('hidden');
+            }
+        }
+
+        function continueQuiz() {
+            startQuiz(quizConfig.type, quizConfig.category);
+        }
+
+        function shuffle(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function handleResetMemory() {
+            initAudio();
+            usedQuestionIds = new Set();
+            errorMsg = '';
+            renderHome();
+        }
+
+        function saveProfile() {
+            const nickInput = document.getElementById('nickname-input').value.trim();
+            const prefInput = document.getElementById('prefecture-input').value;
+            
+            if (!nickInput || !prefInput) {
+                errorMsg = 'ニックネームと出身県を両方入力してください。';
+                renderProfile();
+                return;
+            }
+            
+            currentUser = { nickname: nickInput, prefecture: prefInput };
+            localStorage.setItem('fukui_quiz_user', JSON.stringify(currentUser));
+            errorMsg = '';
+            setMode('home');
+        }
+
+        function saveScoreRecord() {
+            if (!currentUser.nickname) return;
+            
+            const newRecord = {
+                date: new Date().toISOString(),
+                mode: quizConfig.title,
+                score: score,
+                total: quizConfig.count,
+                percentage: Math.round((score / quizConfig.count) * 100),
+                points: score * 10 
+            };
+            
+            localScores.push(newRecord);
+            localStorage.setItem('fukui_quiz_scores', JSON.stringify(localScores));
+        }
+
+        function toggleEffectLayer(show) {
+            const layer = document.getElementById('effect-layer');
+            if (layer) {
+                layer.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function setMode(modeStr) {
+            initAudio(); 
+            
+            toggleEffectLayer(modeStr === 'home' || modeStr === 'result');
+            
+            // リンク集画面の場合は共通の広告枠を隠す（専用広告を出すため）
+            if (modeStr === 'links') {
+                document.getElementById('ad-top-wrapper').classList.add('hidden');
+                document.getElementById('ad-bottom-wrapper').classList.add('hidden');
+            } else {
+                loadAds(); // その他の画面では共通広告を表示
+            }
+
+            if (modeStr === 'home') renderHome();
+            else if (modeStr === 'category') renderCategory();
+            else if (modeStr === 'quiz') renderQuiz();
+            else if (modeStr === 'result') renderResult();
+            else if (modeStr === 'profile') renderProfile();
+            else if (modeStr === 'ranking') renderRanking();
+            else if (modeStr === 'links') renderLinks(); 
+            else if (modeStr === 'contact') renderContact();
+            else if (modeStr === 'admin') {
+                const pass = prompt('【管理者専用】パスワードを入力してください：');
+                if (pass === 'fukui2026') { 
+                    renderAdmin();
+                } else {
+                    if (pass !== null) alert('パスワードが違います。');
+                }
+            }
+        }
+
+        function startQuiz(type, categoryName = null) {
+            initAudio(); 
+            
+            let availableQuestions = QUIZ_DATA.filter(q => !usedQuestionIds.has(q.id));
+            if (type === 'category') {
+                availableQuestions = availableQuestions.filter(q => q.category === categoryName);
+            }
+
+            let requiredCount = 5;
+            if (type === 'category') requiredCount = 4;
+            if (type === 'hard') requiredCount = 10;
+
+            if (availableQuestions.length < requiredCount) {
+                errorMsg = `【警告】未挑戦の問題が不足しています。履歴をリセットして再挑戦してください。`;
+                setMode('home');
+                return;
+            }
+
+            const selected = shuffle(availableQuestions).slice(0, requiredCount);
+            currentQuiz = selected.map(q => ({
+                ...q,
+                options: shuffle([...q.options])
+            }));
+
+            selected.forEach(q => usedQuestionIds.add(q.id));
+
+            let title = '';
+            if (type === 'hard') title = '【激ムズ】真の県民愛テスト';
+            else if (type === 'random') title = '全ジャンル・ランダム5番勝負！';
+            else title = `${categoryName}の難問に挑戦`;
+
+            quizConfig = { title, count: requiredCount, type, category: categoryName };
+            currentIndex = 0;
+            score = 0;
+            wrongAnswers = []; 
+            selectedOption = null;
+            isAnswered = false;
+            errorMsg = '';
+            
+            setMode('quiz');
+        }
+
+        function handleAnswer(option) {
+            if (isAnswered) return;
+            selectedOption = option;
+            isAnswered = true;
+            
+            const currentQ = currentQuiz[currentIndex];
+            const isCorrect = (option === currentQ.answer);
+            
+            playSound(isCorrect ? 'correct' : 'wrong');
+            showMark(isCorrect);
+            
+            if (isCorrect) {
+                score++;
+            } else {
+                wrongAnswers.push({
+                    question: currentQ.question,
+                    answer: currentQ.answer,
+                    explanation: currentQ.explanation
+                });
+            }
+            renderQuiz();
+        }
+
+        function handleNext() {
+            initAudio();
+            if (currentIndex < currentQuiz.length - 1) {
+                currentIndex++;
+                selectedOption = null;
+                isAnswered = false;
+                renderQuiz();
+            } else {
+                saveScoreRecord(); 
+                setMode('result');
+            }
+        }
+
+        // --- 画面レンダリング関数 ---
+
+        function renderHome() {
+            window.scrollTo(0, 0);
+            
+            let profileHtml = '';
+            if (currentUser.nickname) {
+                profileHtml = `
+                    <div class="absolute top-4 right-4 flex items-center gap-2 bg-white border-2 border-slate-800 px-3 py-1.5 rounded-full shadow-[2px_2px_0_0_#1e293b]">
+                        <span class="text-blue-600 w-4 h-4">${ICONS.User}</span>
+                        <span class="text-sm font-bold text-slate-800">${currentUser.nickname} <span class="text-xs text-slate-500">(${currentUser.prefecture})</span></span>
+                        <button onclick="setMode('profile')" class="text-xs text-slate-400 hover:text-blue-500 ml-2 underline decoration-slate-400">変更</button>
+                    </div>
+                `;
+            } else {
+                 profileHtml = `
+                    <div class="absolute top-4 right-4">
+                        <button onclick="setMode('profile')" class="flex items-center gap-1 bg-yellow-300 border-2 border-slate-800 px-3 py-1.5 rounded-full shadow-[2px_2px_0_0_#1e293b] text-sm font-bold text-slate-800 hover:bg-yellow-400 active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all">
+                            <span class="w-4 h-4">${ICONS.User}</span> ランキングに参加
+                        </button>
+                    </div>
+                `;
+            }
+
+            let html = `
+            <div class="flex-1 flex flex-col items-center justify-center p-6 w-full animate-fade-in relative z-10 my-auto">
+                ${profileHtml}
+                <div class="max-w-2xl w-full text-center space-y-8 md:space-y-10 mt-8">
+                    <div class="space-y-4">
+                        <h2 class="text-xl md:text-2xl font-bold text-red-600 tracking-wider">
+                            ＼ 地元民しか解けない！？ ／
+                        </h2>
+                        <h1 class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]" style="text-shadow: 3px 3px 0 #e2e8f0;">
+                            福井県民<br />
+                            <span class="text-blue-600">ショー</span>
+                        </h1>
+                        <p class="text-slate-600 text-lg md:text-xl font-bold mt-4">
+                            えっ、こんなの知ってるの…？<br class="md:hidden" />あなたの『地元愛』が今、試される！
+                        </p>
+                    </div>`;
+
+            if (errorMsg) {
+                html += `
+                    <div class="bg-red-50 border-2 border-red-800 p-4 rounded-xl flex items-center justify-center gap-2 text-red-700 font-bold relative z-20 shadow-[4px_4px_0_0_#991b1b]">
+                        ${ICONS.AlertTriangle}
+                        <p>${errorMsg}</p>
+                    </div>`;
+            }
+
+            html += `
+                    <div class="grid gap-4 md:gap-6 md:grid-cols-2 relative z-20">
+                        <button onclick="setMode('category')" class="group relative w-full p-5 md:p-8 rounded-2xl bg-white border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all duration-100 flex flex-col items-center text-center">
+                            <div class="text-blue-500 w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform">${ICONS.Map}</div>
+                            <h2 class="text-lg md:text-xl font-black mb-1 md:mb-2 text-slate-800">ジャンルを選んで挑戦</h2>
+                            <p class="text-slate-600 font-bold text-sm">得意なカテゴリで実力試し<br/>(4問連続)</p>
+                        </button>
+
+                        <button onclick="startQuiz('random')" class="group relative w-full p-5 md:p-8 rounded-2xl bg-white border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all duration-100 flex flex-col items-center text-center">
+                            <div class="text-emerald-500 w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform">${ICONS.Sparkles}</div>
+                            <h2 class="text-lg md:text-xl font-black mb-1 md:mb-2 text-slate-800">ランダムで挑戦</h2>
+                            <p class="text-slate-600 font-bold text-sm">全ジャンルから容赦なく出題<br/>(ランダム5問)</p>
+                        </button>
+                        
+                        <button onclick="startQuiz('hard')" class="group relative w-full p-5 md:p-8 rounded-2xl bg-white border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all duration-100 flex flex-col items-center text-center md:col-span-2">
+                            <div class="text-red-500 w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-transform">${ICONS.Flame}</div>
+                            <h2 class="text-lg md:text-xl font-black mb-1 md:mb-2 text-slate-800">【激ムズ】真の県民愛テスト</h2>
+                            <p class="text-slate-600 font-bold text-sm">限界突破！全ジャンル入り乱れる10問連続</p>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 relative z-20">
+                         <button onclick="setMode('ranking')" class="w-full max-w-sm mx-auto p-4 rounded-xl bg-slate-800 text-white border-2 border-slate-800 shadow-[4px_4px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-2 font-black text-lg">
+                            <div class="w-6 h-6 text-yellow-400">${ICONS.Award}</div>
+                            ランキングを見る
+                        </button>
+                    </div>
+
+                    <div class="pt-6 md:pt-8 relative z-20 pb-10">
+                        <button onclick="handleResetMemory()" class="flex items-center justify-center gap-2 mx-auto text-slate-500 hover:text-slate-800 font-bold transition-colors text-sm">
+                            <div class="w-4 h-4">${ICONS.RefreshCw}</div>
+                            挑戦履歴をリセットして最初から
+                        </button>
+                        <p class="text-xs text-slate-400 font-bold mt-2 mb-8">現在の出題済み問題数: ${usedQuestionIds.size} / ${QUIZ_DATA.length}</p>
+                        
+                        <div class="flex flex-wrap justify-center items-center gap-3">
+                            <button onclick="setMode('links')" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-slate-800 rounded-xl shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none font-black text-slate-700 text-sm transition-all">
+                                <div class="w-5 h-5 text-emerald-500">${ICONS.Link}</div> ご当地リンク集
+                            </button>
+                            <button onclick="setMode('contact')" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-slate-800 rounded-xl shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none font-black text-slate-700 text-sm transition-all">
+                                <div class="w-5 h-5 text-blue-500">${ICONS.Mail}</div> お問い合わせ
+                            </button>
+                            <button onclick="setMode('admin')" class="flex items-center gap-1 px-3 py-3 bg-slate-100 border-2 border-slate-300 rounded-xl shadow-[2px_2px_0_0_#cbd5e1] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none font-black text-slate-500 hover:text-slate-700 hover:bg-slate-200 text-xs transition-all ml-2">
+                                <div class="w-4 h-4">${ICONS.Settings}</div> 管理
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function renderCategory() {
+            window.scrollTo(0, 0);
+            let html = `
+            <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
+                <div class="max-w-4xl mx-auto">
+                    <button onclick="setMode('home')" class="text-slate-600 hover:text-blue-600 mb-8 flex items-center gap-2 transition-colors font-black bg-white border-2 border-slate-800 px-4 py-2 rounded-lg shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none w-max">
+                        ← ホームに戻る
+                    </button>
+                    
+                    <h2 class="text-2xl md:text-3xl font-black text-center mb-10 text-slate-800">
+                        挑戦するジャンルを選んでください
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-10">`;
+
+            CATEGORIES.forEach(cat => {
+                const available = QUIZ_DATA.filter(q => q.category === cat.name && !usedQuestionIds.has(q.id)).length;
+                const isPlayable = available >= 4;
+                const btnClass = isPlayable 
+                    ? "bg-white border-slate-800 hover:bg-slate-50 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none cursor-pointer" 
+                    : "bg-slate-200 border-slate-400 opacity-60 cursor-not-allowed";
+                const iconColor = isPlayable ? cat.color : "text-slate-400";
+                
+                html += `
+                        <button ${isPlayable ? `onclick="startQuiz('category', '${cat.name}')"` : "disabled"} 
+                            class="relative p-6 rounded-2xl border-2 transition-all duration-100 flex flex-col items-center text-center ${btnClass}">
+                            <div class="w-10 h-10 mb-3 ${iconColor}">${ICONS[cat.icon]}</div>
+                            <h3 class="text-xl font-black mb-2 text-slate-800">${cat.name}</h3>
+                            <p class="text-sm font-bold text-slate-600 mb-4">${cat.desc}</p>`;
+
+                if (isPlayable) {
+                    html += `<span class="text-xs bg-blue-100 px-3 py-1.5 rounded-full text-blue-800 font-black border-2 border-blue-200">残り問題: ${available}問</span>`;
+                } else {
+                    html += `<span class="text-xs bg-slate-300 px-3 py-1.5 rounded-full text-slate-700 font-black border-2 border-slate-400">全問クリア！</span>`;
+                }
+                html += `</button>`;
+            });
+
+            html += `
+                    </div>
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function renderQuiz() {
+            window.scrollTo(0, 0);
+            const question = currentQuiz[currentIndex];
+            const titleColor = quizConfig.type === 'hard' ? 'text-red-700' : 'text-blue-700';
+            const accentColor = quizConfig.type === 'hard' ? 'bg-red-500' : 'bg-blue-500';
+
+            let html = `
+            <div class="flex-1 flex flex-col items-center p-6 w-full animate-fade-in relative z-10">
+                <div class="w-full max-w-3xl pb-10">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 bg-white border-2 border-slate-800 rounded-xl px-4 py-2 shadow-[2px_2px_0_0_#1e293b]">
+                        <span class="font-black text-sm md:text-base ${titleColor}">
+                            ${quizConfig.title}
+                        </span>
+                        <span class="text-slate-800 font-black">
+                            第 ${currentIndex + 1} 問 <span class="text-sm font-bold text-slate-500">/ 全 ${quizConfig.count} 問</span>
+                        </span>
+                    </div>
+
+                    <div class="bg-white border-2 border-slate-800 rounded-2xl p-6 md:p-10 mb-8 shadow-[4px_4px_0_0_#1e293b] relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-2 h-full ${accentColor}"></div>
+                        <span class="text-xs font-black text-slate-800 bg-slate-100 border-2 border-slate-800 px-3 py-1.5 rounded-full mb-4 inline-block">
+                            ジャンル: ${question.category}
+                        </span>
+                        <h2 class="text-xl md:text-2xl leading-relaxed font-black text-slate-900">
+                            ${question.question}
+                        </h2>
+                    </div>
+
+                    <div class="grid gap-3 md:gap-4" id="options-container">`;
+
+            question.options.forEach((option, idx) => {
+                let btnClass = "p-4 md:p-5 text-left rounded-xl border-2 transition-all duration-100 text-base md:text-lg font-bold w-full ";
+                
+                if (!isAnswered) {
+                    btnClass += "bg-white border-slate-800 text-slate-800 shadow-[4px_4px_0_0_#1e293b] hover:bg-slate-50 active:translate-y-[4px] active:translate-x-[4px] active:shadow-none cursor-pointer";
+                } else {
+                    if (option === question.answer) {
+                        btnClass += "bg-emerald-100 border-emerald-600 text-emerald-900 shadow-none translate-y-[4px] translate-x-[4px]"; 
+                    } else if (option === selectedOption) {
+                        btnClass += "bg-red-100 border-red-600 text-red-900 shadow-none translate-y-[4px] translate-x-[4px]"; 
+                    } else {
+                        btnClass += "bg-slate-100 border-slate-300 text-slate-400 opacity-60 cursor-not-allowed"; 
+                    }
+                }
+
+                const safeOption = option.replace(/'/g, "\\'");
+
+                html += `
+                        <button ${!isAnswered ? `onclick="handleAnswer('${safeOption}')"` : "disabled"} class="${btnClass}">
+                            <span class="mr-3 text-slate-400 font-black">${idx + 1}.</span>
+                            ${option}
+                        </button>`;
+            });
+
+            html += `</div>`;
+
+            if (isAnswered) {
+                const nextBtnText = currentIndex < currentQuiz.length - 1 ? '次の問題へ' : '結果を見る';
+                html += `
+                    <div class="mt-8 flex justify-end animate-fade-in">
+                        <button onclick="handleNext()" class="flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all">
+                            ${nextBtnText}
+                            <div class="w-5 h-5">${ICONS.ChevronRight}</div>
+                        </button>
+                    </div>`;
+            }
+
+            html += `
+                </div>
+            </div>`;
+            
+            appRoot.innerHTML = html;
+        }
+
+        function renderResult() {
+            window.scrollTo(0, 0);
+            const percentage = Math.round((score / quizConfig.count) * 100);
+            
+            let rank = '';
+            let message = '';
+            if (percentage === 100) {
+                rank = quizConfig.type === 'hard' ? 'SSランク：ご当地の創造神' : 'Sランク：真の県民（神レベル）';
+                message = quizConfig.type === 'hard' ? '全10問正解の偉業！あなたはその県そのものです！' : '完璧です！あなたは間違いなく生粋の地元民、あるいはご当地を愛しすぎている変態（褒め言葉）です！';
+            } else if (percentage >= 80) {
+                rank = 'Aランク：ご当地マニア';
+                message = '素晴らしい知識量！地元の魅力について一晩中語り合えそうですね。';
+            } else if (percentage >= 50) {
+                rank = 'Bランク：ご当地好き';
+                message = 'なかなかやりますね！でもご当地の奥深さはまだまだこんなもんじゃありませんよ。';
+            } else {
+                rank = 'Cランク：エセ県民！？';
+                message = 'あれれ…？地元のこと、もっと知ってほしいな。ぜひもう一度チャレンジを！';
+            }
+
+            let html = `
+            <div class="flex-1 flex flex-col items-center justify-start p-6 w-full relative animate-fade-in pb-20 z-10">
+                <div class="max-w-2xl w-full">
+                    <div class="bg-white border-4 border-slate-800 rounded-3xl p-8 md:p-10 text-center relative shadow-[8px_8px_0_0_#1e293b] mb-10">
+                        <div class="absolute inset-0 flex justify-center items-center opacity-[0.03] pointer-events-none">
+                            <div class="w-96 h-96 text-blue-900">${ICONS.Trophy}</div>
+                        </div>
+                        
+                        <div class="relative z-10">
+                            <h2 class="text-xl font-black text-slate-800 mb-2">あなたの正解数は…</h2>
+                            <div class="text-7xl font-black mb-6 text-slate-900" style="text-shadow: 3px 3px 0 #e2e8f0;">
+                                ${score} <span class="text-3xl text-slate-500 font-bold">/ ${quizConfig.count}</span>
+                            </div>
+                            
+                            <div class="bg-blue-100 border-2 border-blue-800 rounded-2xl p-6 mb-8 shadow-[4px_4px_0_0_#1e3a8a]">
+                                <h3 class="text-xl md:text-2xl font-black text-blue-900 mb-3">${rank}</h3>
+                                <p class="text-blue-900 text-sm md:text-base leading-relaxed font-bold">${message}</p>
+                            </div>
+
+                            <div class="space-y-4 max-w-sm mx-auto">
+                                ${(() => {
+                                    let availableQuestions = QUIZ_DATA.filter(q => !usedQuestionIds.has(q.id));
+                                    if (quizConfig.type === 'category') {
+                                        availableQuestions = availableQuestions.filter(q => q.category === quizConfig.category);
+                                    }
+                                    let requiredCount = quizConfig.type === 'category' ? 4 : (quizConfig.type === 'hard' ? 10 : 5);
+                                    
+                                    if (availableQuestions.length >= requiredCount) {
+                                        return `
+                                        <button onclick="continueQuiz()" class="w-full py-4 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all flex items-center justify-center gap-2">
+                                            <div class="w-5 h-5">${ICONS.RefreshCw}</div>
+                                            続けて挑戦する
+                                        </button>`;
+                                    } else {
+                                        return `
+                                        <div class="w-full py-3 rounded-xl bg-slate-200 text-slate-600 font-bold text-sm border-2 border-slate-400">
+                                            このモードの残り問題がありません
+                                        </div>`;
+                                    }
+                                })()}
+                                <button onclick="setMode('home')" class="w-full py-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all block">
+                                    ホームに戻る
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+
+            if (wrongAnswers.length > 0) {
+                html += `
+                    <div class="w-full">
+                        <h3 class="text-xl md:text-2xl font-black text-slate-800 pb-3 mb-6 flex items-center gap-2 bg-white border-2 border-slate-800 p-4 rounded-xl shadow-[4px_4px_0_0_#1e293b]">
+                            <span class="text-red-500 text-2xl">📝</span> 間違えた問題の復習
+                        </h3>
+                        <div class="space-y-6">`;
+                
+                wrongAnswers.forEach((item, index) => {
+                    html += `
+                            <div class="bg-white border-2 border-slate-800 rounded-2xl p-5 md:p-6 shadow-[4px_4px_0_0_#1e293b]">
+                                <p class="font-black text-slate-900 mb-4 leading-relaxed"><span class="text-slate-400 mr-1">Q.</span> ${item.question}</p>
+                                <div class="bg-emerald-100 border-2 border-emerald-600 text-emerald-900 px-4 py-3 rounded-xl font-black mb-3 flex items-center">
+                                    <span class="mr-2">💡 正解:</span> ${item.answer}
+                                </div>
+                                <div class="text-slate-700 text-sm md:text-base leading-relaxed p-4 bg-slate-100 rounded-xl border-2 border-slate-300 font-bold">
+                                    <span class="font-black text-slate-800 mb-1 block">【解説】</span>
+                                    ${item.explanation}
+                                </div>
+                            </div>`;
+                });
+                
+                html += `
+                        </div>
+                    </div>`;
+            }
+
+            html += `
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function renderProfile() {
+            window.scrollTo(0, 0);
+            
+            let prefOptions = '<option value="">選択してください</option>';
+            PREFECTURES.forEach(p => {
+                prefOptions += `<option value="${p}" ${currentUser.prefecture === p ? 'selected' : ''}>${p}</option>`;
+            });
+
+            let html = `
+            <div class="flex-1 flex flex-col items-center justify-center p-6 w-full animate-fade-in relative z-10 my-auto">
+                <div class="max-w-md w-full bg-white border-4 border-slate-800 rounded-3xl p-8 shadow-[8px_8px_0_0_#1e293b]">
+                    <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-4">
+                        <span class="text-blue-500 w-8 h-8">${ICONS.User}</span>
+                        プレイヤー登録
+                    </h2>
+                    
+                    <p class="text-sm font-bold text-slate-600 mb-6">
+                        ランキングに参加するためのニックネームと出身地を登録してください。
+                    </p>
+            `;
+            
+            if (errorMsg) {
+                html += `
+                    <div class="bg-red-50 border-2 border-red-800 p-3 rounded-lg flex items-center gap-2 text-red-700 font-bold mb-6 text-sm">
+                        <div class="w-5 h-5 shrink-0">${ICONS.AlertTriangle}</div> <p>${errorMsg}</p>
+                    </div>`;
+            }
+
+            html += `
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-black text-slate-800 mb-2">ニックネーム</label>
+                            <input type="text" id="nickname-input" value="${currentUser.nickname}" maxlength="10" placeholder="例：クイズたろう" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-black text-slate-800 mb-2">どこの出身？（県検出）</label>
+                            <select id="prefecture-input" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all appearance-none cursor-pointer">
+                                ${prefOptions}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-4">
+                        <button onclick="saveProfile()" class="w-full py-4 rounded-xl bg-blue-600 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg">
+                            登録して始める
+                        </button>
+                        <button onclick="setMode('home')" class="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-bold border-2 border-slate-300 hover:bg-slate-200 transition-all">
+                            キャンセル
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function renderRanking() {
+            window.scrollTo(0, 0);
+            
+            const myTotalPoints = localScores.reduce((sum, record) => sum + record.points, 0);
+            
+            let rankingData = [...DUMMY_RANKING];
+            if (currentUser.nickname && myTotalPoints > 0) {
+                rankingData.push({
+                    nickname: currentUser.nickname + ' (あなた)',
+                    prefecture: currentUser.prefecture,
+                    score: myTotalPoints,
+                    isMe: true
+                });
+            }
+            
+            rankingData.sort((a, b) => b.score - a.score);
+
+            let html = `
+            <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
+                <div class="max-w-2xl mx-auto">
+                    <button onclick="setMode('home')" class="text-slate-600 hover:text-blue-600 mb-6 flex items-center gap-2 transition-colors font-black bg-white border-2 border-slate-800 px-4 py-2 rounded-lg shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none w-max">
+                        ← ホームに戻る
+                    </button>
+                    
+                    <div class="bg-white border-4 border-slate-800 rounded-3xl p-6 md:p-10 shadow-[8px_8px_0_0_#1e293b] mb-10">
+                        <div class="flex items-center justify-center gap-3 mb-8 border-b-2 border-slate-200 pb-6">
+                            <div class="text-yellow-500 w-10 h-10">${ICONS.Award}</div>
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-800">総合ポイント ランキング</h2>
+                        </div>
+                        
+                        <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-xl mb-8 text-sm font-bold text-blue-800">
+                            ※現在表示されているのは「あなたの端末内のスコア」と「ダミーデータ」を合わせた擬似ランキングです。<br>
+                            全国のユーザーと競い合うリアルタイムランキングを実装するには、外部データベース（Firebase等）との連携が必要になります。
+                        </div>
+
+                        <div class="space-y-3">
+            `;
+
+            rankingData.forEach((user, index) => {
+                let rankClass = "bg-slate-50 border-slate-200 text-slate-600";
+                let badge = `<span class="text-lg font-black w-8 text-center text-slate-400">${index + 1}</span>`;
+                
+                if (index === 0) {
+                    rankClass = "bg-yellow-50 border-yellow-400";
+                    badge = `<span class="text-2xl w-8 text-center">🥇</span>`;
+                } else if (index === 1) {
+                    rankClass = "bg-slate-100 border-slate-400";
+                    badge = `<span class="text-2xl w-8 text-center">🥈</span>`;
+                } else if (index === 2) {
+                    rankClass = "bg-orange-50 border-orange-400";
+                    badge = `<span class="text-2xl w-8 text-center">🥉</span>`;
+                }
+
+                if (user.isMe) {
+                    rankClass = "bg-blue-100 border-blue-500 ring-4 ring-blue-200 shadow-md transform -translate-y-1";
+                }
+
+                html += `
+                            <div class="flex items-center justify-between p-4 rounded-xl border-2 ${rankClass} transition-all">
+                                <div class="flex items-center gap-3 md:gap-4">
+                                    ${badge}
+                                    <div>
+                                        <div class="font-black text-slate-800 text-lg">${user.nickname}</div>
+                                        <div class="text-xs font-bold text-slate-500">${user.prefecture}</div>
+                                    </div>
+                                </div>
+                                <div class="font-black text-xl text-slate-800">
+                                    ${user.score} <span class="text-xs text-slate-500">pt</span>
+                                </div>
+                            </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function renderLinks() {
+            window.scrollTo(0, 0);
+            
+            const linksTopAd = localStorage.getItem('fukui_quiz_links_ad_top') || '';
+            const linksBottomAd = localStorage.getItem('fukui_quiz_links_ad_bottom') || '';
+            
+            let html = `
+            <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
+                <div class="max-w-3xl mx-auto">
+                    <button onclick="setMode('home')" class="text-slate-600 hover:text-blue-600 mb-6 flex items-center gap-2 transition-colors font-black bg-white border-2 border-slate-800 px-4 py-2 rounded-lg shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none w-max">
+                        ← ホームに戻る
+                    </button>
+                    
+                    <div class="bg-white border-4 border-slate-800 rounded-3xl p-6 md:p-10 shadow-[8px_8px_0_0_#1e293b] mb-10">
+                        <div class="flex items-center justify-center gap-3 mb-8 border-b-2 border-slate-200 pb-6">
+                            <div class="text-emerald-500 w-8 h-8 md:w-10 md:h-10">${ICONS.Link}</div>
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-800">ご当地リンク集</h2>
+                        </div>
+                        
+                        <p class="text-slate-600 font-bold mb-6">各都道府県の魅力をもっと知りたい方は、以下のサイトもぜひチェックしてみてください！</p>
+            `;
+
+            if (linksTopAd.trim()) {
+                html += `<div class="mb-6 flex justify-center w-full overflow-hidden">${linksTopAd}</div>`;
+            }
+                        
+            html += `<div class="space-y-4">`;
+
+            customLinks.forEach(link => {
+                html += `
+                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block p-5 bg-white border-2 border-slate-800 rounded-xl shadow-[4px_4px_0_0_#1e293b] hover:bg-slate-50 active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all group">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-lg font-black text-blue-700 group-hover:text-blue-800 mb-1 flex items-center gap-2">
+                                            ${link.title}
+                                        </h3>
+                                        <p class="text-sm font-bold text-slate-600">${link.desc}</p>
+                                    </div>
+                                    <div class="text-slate-400 group-hover:text-blue-500 w-5 h-5 shrink-0 mt-1">${ICONS.ExternalLink}</div>
+                                </div>
+                            </a>
+                `;
+            });
+
+            html += `
+                        </div>
+            `;
+
+            if (linksBottomAd.trim()) {
+                html += `<div class="mt-8 flex justify-center w-full overflow-hidden">${linksBottomAd}</div>`;
+            }
+            
+            html += `
+                        <div class="mt-8 p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-center">
+                            <p class="font-bold text-blue-800 text-sm md:text-base leading-relaxed">
+                                当サイトへのリンクをご希望の自治体や企業様は、<br class="hidden md:block">お問い合わせページよりご連絡ください。
+                            </p>
+                            <button onclick="setMode('contact')" class="mt-4 inline-flex items-center gap-2 px-5 py-3 bg-white border-2 border-slate-800 rounded-xl shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none font-black text-slate-800 transition-all">
+                                <div class="w-4 h-4 text-blue-500">${ICONS.Mail}</div>
+                                お問い合わせへ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            appRoot.innerHTML = html;
+        }
+
+        function renderAdmin() {
+            window.scrollTo(0, 0);
+            
+            const currentTopAd = localStorage.getItem('fukui_quiz_ad_top') || '';
+            const currentBottomAd = localStorage.getItem('fukui_quiz_ad_bottom') || '';
+
+            let html = `
+            <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
+                <div class="max-w-3xl mx-auto">
+                    <button onclick="setMode('home')" class="text-slate-600 hover:text-blue-600 mb-6 flex items-center gap-2 transition-colors font-black bg-white border-2 border-slate-800 px-4 py-2 rounded-lg shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none w-max">
+                        ← ホームに戻る
+                    </button>
+                    
+                    <div class="bg-white border-4 border-slate-800 rounded-3xl p-6 md:p-10 shadow-[8px_8px_0_0_#1e293b] mb-10">
+                        <div class="flex items-center justify-center gap-3 mb-6 border-b-2 border-slate-200 pb-6">
+                            <span class="text-3xl">⚙️</span>
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-800">広告・管理者設定</h2>
+                        </div>
+                        
+                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">アフィリエイト広告設定</h3>
+                        <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-xl mb-6 shadow-sm">
+                            <h3 class="font-black text-yellow-900 text-sm mb-2 flex items-center gap-1">⚠️ アフィリエイトタグに関する注意</h3>
+                            <p class="font-bold text-yellow-800 text-xs leading-relaxed">
+                                必ず「バナー画像（HTML形式）」タイプのシンプルなタグ（&lt;a&gt;タグと&lt;img&gt;タグで構成されたもの）を貼り付けてください。<br>
+                                &lt;script&gt;タグを含む広告コードは、セキュリティの都合上正しく表示されません。
+                            </p>
+                        </div>
+
+                        <div class="space-y-6 mb-10">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 mb-2">上部 広告枠 (HTMLタグ)</label>
+                                <textarea id="top-ad-input" rows="4" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-mono text-xs transition-all resize-y placeholder:text-slate-400" placeholder="<a href='...'><img src='...'></a>">${currentTopAd}</textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 mb-2">下部 広告枠 (HTMLタグ)</label>
+                                <textarea id="bottom-ad-input" rows="4" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-mono text-xs transition-all resize-y placeholder:text-slate-400" placeholder="<a href='...'><img src='...'></a>">${currentBottomAd}</textarea>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-pink-500 pl-3">リンク集ページ専用 広告設定</h3>
+                        <p class="font-bold text-slate-600 text-sm mb-4">リンク集のページの上下に表示する専用の広告枠です。</p>
+                        
+                        <div class="space-y-6 mb-10">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 mb-2">リンク集 上部広告枠 (HTMLタグ)</label>
+                                <textarea id="links-top-ad-input" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-mono text-xs transition-all resize-y placeholder:text-slate-400" placeholder="<a href='...'><img src='...'></a>">${localStorage.getItem('fukui_quiz_links_ad_top') || ''}</textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 mb-2">リンク集 下部広告枠 (HTMLタグ)</label>
+                                <textarea id="links-bottom-ad-input" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-mono text-xs transition-all resize-y placeholder:text-slate-400" placeholder="<a href='...'><img src='...'></a>">${localStorage.getItem('fukui_quiz_links_ad_bottom') || ''}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 text-center border-b-2 border-slate-200 pb-8">
+                            <button onclick="saveAds()" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg mx-auto">
+                                全ての広告設定を保存する
+                            </button>
+                            <div id="ad-result-message" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
+                        </div>
+
+                        <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-emerald-500 pl-3">ご当地リンク集の管理</h3>
+                        <p class="font-bold text-slate-600 text-sm mb-4">お問い合わせで依頼があった相互リンクなどは、ここから追加・管理できます。</p>
+                        
+                        <div class="space-y-3 mb-6">
+            `;
+
+            if (customLinks.length === 0) {
+                html += `<p class="text-slate-500 font-bold text-sm bg-slate-100 p-4 rounded-xl border-2 border-slate-200 text-center">登録されているリンクはありません。</p>`;
+            } else {
+                customLinks.forEach((link, index) => {
+                    html += `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                <div class="overflow-hidden mr-4">
+                                    <div class="font-black text-slate-800 text-sm truncate">${link.title}</div>
+                                    <div class="text-xs text-blue-500 truncate"><a href="${link.url}" target="_blank" class="hover:underline">${link.url}</a></div>
+                                </div>
+                                <button onclick="deleteLink(${index})" class="shrink-0 px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 font-bold text-xs border-2 border-red-300 rounded-lg transition-colors">
+                                    削除
+                                </button>
+                            </div>
+                    `;
+                });
+            }
+
+            html += `
+                        </div>
+
+                        <div class="bg-emerald-50 border-2 border-emerald-200 p-5 rounded-xl space-y-4 shadow-sm">
+                            <h4 class="font-black text-emerald-800 text-sm mb-2">＋ 新しいリンクを追加</h4>
+                            <div>
+                                <input type="text" id="new-link-title" placeholder="サイト名（例：福井市観光協会）" class="w-full px-4 py-2 rounded-lg border-2 border-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 font-bold text-sm mb-3">
+                                <input type="text" id="new-link-url" placeholder="URL（例：https://...）" class="w-full px-4 py-2 rounded-lg border-2 border-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 font-bold text-sm mb-3">
+                                <input type="text" id="new-link-desc" placeholder="サイトの紹介文・PR（任意）" class="w-full px-4 py-2 rounded-lg border-2 border-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 font-bold text-sm">
+                            </div>
+                            <button onclick="addLink()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all flex items-center justify-center gap-2">
+                                <div class="w-4 h-4">${ICONS.Link}</div> リンクを追加する
+                            </button>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>`;
+            appRoot.innerHTML = html;
+        }
+
+        function saveAds() {
+            const topAd = document.getElementById('top-ad-input').value;
+            const bottomAd = document.getElementById('bottom-ad-input').value;
+            const linksTopAd = document.getElementById('links-top-ad-input').value;
+            const linksBottomAd = document.getElementById('links-bottom-ad-input').value;
+            
+            localStorage.setItem('fukui_quiz_ad_top', topAd);
+            localStorage.setItem('fukui_quiz_ad_bottom', bottomAd);
+            localStorage.setItem('fukui_quiz_links_ad_top', linksTopAd);
+            localStorage.setItem('fukui_quiz_links_ad_bottom', linksBottomAd);
+            
+            loadAds();
+            
+            const msgEl = document.getElementById('ad-result-message');
+            msgEl.innerHTML = '✅ 広告設定を保存し、アプリに反映しました！';
+            msgEl.className = 'mt-4 text-center font-bold text-emerald-800 bg-emerald-50 border-emerald-500 p-4 rounded-xl border-2 block';
+            
+            setTimeout(() => {
+                msgEl.classList.add('hidden');
+                msgEl.classList.remove('block');
+            }, 3000);
+        }
+
+        function saveLinksToStorage() {
+            localStorage.setItem('fukui_quiz_custom_links', JSON.stringify(customLinks));
+        }
+
+        window.addLink = function() {
+            const title = document.getElementById('new-link-title').value.trim();
+            const url = document.getElementById('new-link-url').value.trim();
+            const desc = document.getElementById('new-link-desc').value.trim();
+
+            if (!title || !url) {
+                alert('サイト名とURLは入力必須です！');
+                return;
+            }
+
+            customLinks.push({ title, url, desc });
+            saveLinksToStorage();
+            renderAdmin();
+        };
+
+        window.deleteLink = function(index) {
+            if (confirm('このリンクを削除してもよろしいですか？')) {
+                customLinks.splice(index, 1);
+                saveLinksToStorage();
+                renderAdmin();
+            }
+        };
+
+        function renderContact() {
+            window.scrollTo(0, 0);
+
+            let html = `
+            <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
+                <div class="max-w-2xl mx-auto">
+                    <button onclick="setMode('home')" class="text-slate-600 hover:text-blue-600 mb-6 flex items-center gap-2 transition-colors font-black bg-white border-2 border-slate-800 px-4 py-2 rounded-lg shadow-[2px_2px_0_0_#1e293b] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none w-max">
+                        ← ホームに戻る
+                    </button>
+                    
+                    <div class="bg-white border-4 border-slate-800 rounded-3xl p-6 md:p-10 shadow-[8px_8px_0_0_#1e293b] mb-10">
+                        <div class="flex items-center justify-center gap-3 mb-6 border-b-2 border-slate-200 pb-6">
+                            <div class="text-blue-500 w-8 h-8 md:w-10 md:h-10">${ICONS.Mail}</div>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-800">福井県民ショー<br class="md:hidden"/> お問い合わせ</h2>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border-2 border-yellow-400 p-5 rounded-xl mb-8 shadow-sm">
+                            <h3 class="font-black text-yellow-900 text-lg mb-3 flex items-center gap-2">
+                                <span>💡</span> 各自治体・お店などの皆様へ
+                            </h3>
+                            <p class="font-bold text-yellow-800 text-sm leading-relaxed mb-4">
+                                当サイトのリンクはご自由に（※不正・法律に触れるようなサイトの当サイトのリンクはお断りいたします）。
+                            </p>
+                            <div class="bg-white p-4 rounded-xl border-2 border-yellow-200 shadow-[2px_2px_0_0_#fef08a]">
+                                <p class="font-bold text-slate-700 text-sm leading-relaxed">
+                                    お問い合わせありがとうございます。<br>
+                                    当クイズサイトに関しては、もしよければリンクしていただければと思います。<br><br>
+                                    当サイトにリンクをご希望の方は、HPやInstagram、HPのタイトルなどを以下のフォームよりお申し出ください。<br><br>
+                                    <span class="text-slate-500 text-xs">※基本各都道府県でご活躍されております自治体、お店とさせていただきますが、相互リンクさせていただきました場合はリンク対象とさせていただく場合がございます。</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <form id="contactForm" class="space-y-6">
+                            <div>
+                                <label for="name" class="block text-sm font-black text-slate-800 mb-2">お名前 / 団体名 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
+                                <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-black text-slate-800 mb-2">メールアドレス <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
+                            </div>
+
+                            <div>
+                                <label for="inquiryType" class="block text-sm font-black text-slate-800 mb-2">お問い合わせ種別 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
+                                <div class="relative">
+                                    <select id="inquiryType" name="inquiryType" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected>選択してください</option>
+                                        <option value="相互リンク・サイト紹介について">相互リンク・サイト紹介について</option>
+                                        <option value="クイズ問題の追加・修正について">クイズ問題の追加・修正について</option>
+                                        <option value="その他のお問い合わせ">その他のお問い合わせ</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-800">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t-2 border-slate-200 pt-6 mt-6 bg-blue-50 p-5 rounded-2xl border-2 border-blue-200">
+                                <h4 class="font-black text-blue-800 text-sm flex items-center gap-2 mb-4">
+                                    <div class="w-4 h-4">${ICONS.Link}</div>
+                                    ▼ 相互リンクをご希望の方のみご記入ください
+                                </h4>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="siteTitle" class="block text-sm font-black text-slate-800 mb-2">HPやサイトのタイトル <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
+                                        <input type="text" id="siteTitle" name="siteTitle" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
+                                    </div>
+
+                                    <div>
+                                        <label for="siteUrl" class="block text-sm font-black text-slate-800 mb-2">HPのURL / Instagramアカウント等 <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
+                                        <input type="text" id="siteUrl" name="siteUrl" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
+                                    </div>
+
+                                    <div>
+                                        <label for="sitePr" class="block text-sm font-black text-slate-800 mb-2">自己PR・サイトの紹介文 <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
+                                        <textarea id="sitePr" name="sitePr" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all resize-none"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t-2 border-slate-200 pt-6 mt-6">
+                                <label for="message" class="block text-sm font-black text-slate-800 mb-2">その他お問い合わせ内容・ご要望など <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
+                                <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all resize-none"></textarea>
+                            </div>
+
+                            <div class="pt-4 text-center">
+                                <button type="submit" id="submitBtn" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg flex items-center justify-center gap-2 mx-auto">
+                                    <span id="btnText">送信する</span>
+                                    <svg id="btnSpinner" class="animate-spin -mr-1 ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </button>
+                            </div>
+                            
+                            <div id="resultMessage" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>`;
+            
+            appRoot.innerHTML = html;
+
+            const form = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const resultMessage = document.getElementById('resultMessage');
+
+            // ⚠️ 【重要】ここにGASでデプロイしたWebアプリのURLを貼り付けます
+            const GAS_WEB_APP_URL = 'ここにウェブアプリのURLを貼り付けてください';
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+
+                if(GAS_WEB_APP_URL === 'ここにウェブアプリのURLを貼り付けてください') {
+                    alert('GASのウェブアプリURLが設定されていません。コード（GAS_WEB_APP_URL）を修正してください。');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
+                btnText.textContent = '送信中...';
+                btnSpinner.classList.remove('hidden');
+                resultMessage.classList.add('hidden');
+
+                const formData = new FormData(form);
+                const data = new URLSearchParams(formData);
+
+                try {
+                    const response = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: data,
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        form.reset(); 
+                        resultMessage.innerHTML = '✅ お問い合わせを送信しました。<br>自動返信メールをご確認ください。';
+                        resultMessage.className = 'mt-4 text-center font-bold text-emerald-800 bg-emerald-50 border-emerald-500 p-4 rounded-xl border-2';
+                    } else {
+                        throw new Error(result.message || '送信に失敗しました');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    resultMessage.textContent = '❌ エラーが発生しました。時間をおいて再度お試しください。';
+                    resultMessage.className = 'mt-4 text-center font-bold text-red-800 bg-red-50 border-red-500 p-4 rounded-xl border-2';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
+                    btnText.textContent = '送信する';
+                    btnSpinner.classList.add('hidden');
+                    resultMessage.classList.remove('hidden');
+                }
+            });
+        }
+
+        // 初期表示の設定（最初からキャラを出し、保存された広告を読み込む）
+        loadAds();
+        setMode('home');
+    </script>
+</body>
+</html>
