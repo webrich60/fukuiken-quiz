@@ -4,57 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
+    <!-- SEO最適化 -->
     <title>福井県民ショー - ご当地愛テスト</title>
-    <meta name="description" content="福井のグルメ、観光、歴史、方言、イベントに関する激ムズご当地クイズアプリ。真の県民テストに挑戦して、あなたの「地元愛」を証明しよう！">
+    <meta name="description" content="福井のグルメ、観光、歴史、方言、イベント・祭りに関する激ムズご当地クイズアプリ。真の県民テストに挑戦して、あなたの「地元愛」を証明しよう！">
     <meta name="keywords" content="福井県民ショー,クイズ,激ムズ,ご当地,観光,歴史,方言,テスト,暇つぶし">
-    
+    <meta name="author" content="福井県民ショー">
+    <meta name="robots" content="index, follow">
+
+    <!-- 👇 ここから追加：OGP設定（SNSでの拡散・SEO強化用） -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="福井県民ショー - 激ムズご当地愛テスト">
+    <meta property="og:description" content="福井の魅力が詰まった激ムズクイズに挑戦！全国のプレイヤーと地元愛を競い合おう。">
+    <!-- ※公開URLが確定したら、以下のURLを実際のアプリのURLに書き換えてください -->
+    <meta property="og:url" content="https://webrich60.github.io/あなたのリポジトリ名/">
+    <meta property="og:site_name" content="福井県民ショー">
+    <!-- ※SNSでシェアされた時に大きく表示される画像です。後で本物の画像URLに変えるとクリック率が爆増します -->
+    <meta property="og:image" content="https://placehold.co/1200x630/1e293b/ffffff?text=Fukui+Quiz"> 
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- 👇 ここから追加：構造化データ（Googleに「これは安全で無料のゲームアプリだ」と正確に伝える） -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "福井県民ショー - ご当地愛テスト",
+      "operatingSystem": "Web Browser",
+      "applicationCategory": "GameApplication",
+      "description": "福井県のグルメ、観光、歴史、方言に関するクイズアプリです。リアルタイムランキング搭載。",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      }
+    }
+    </script>
+
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        /* アニメーションと基本設定 */
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            overflow-x: hidden;
+            overflow-x: hidden; /* 横スクロールを防ぐ */
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
         
+        /* ◯❌マークのアニメーション */
         @keyframes markPop {
             0% { transform: scale(0.3); opacity: 0; }
             40% { transform: scale(1.2); opacity: 1; }
             70% { transform: scale(1); opacity: 1; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-        .animate-mark-pop { animation: markPop 1s ease-out forwards; }
+        .animate-mark-pop {
+            animation: markPop 1s ease-out forwards;
+        }
 
+        /* ご当地キャラひょっこりアニメーション1 */
         @keyframes rightPop {
             0%, 40%, 100% { transform: translate(100%, 100%) rotate(20deg); }
             10% { transform: translate(-10%, -40%) rotate(-10deg); } 
             20% { transform: translate(-10%, -30%) rotate(-5deg); }  
             30% { transform: translate(-10%, -40%) rotate(-10deg); }
         }
-        .animate-right-pop { animation: rightPop 7s ease-in-out infinite; }
+        .animate-right-pop {
+            animation: rightPop 7s ease-in-out infinite;
+        }
 
+        /* ご当地キャラひょっこりアニメーション2 */
         @keyframes leftPop {
             0%, 40%, 100% { transform: translate(-100%, 100%) rotate(-20deg); }
             10% { transform: translate(10%, -40%) rotate(10deg); } 
             20% { transform: translate(10%, -30%) rotate(5deg); }
             30% { transform: translate(10%, -40%) rotate(10deg); }
         }
-        .animate-left-pop { animation: leftPop 9s ease-in-out infinite; }
+        .animate-left-pop {
+            animation: leftPop 9s ease-in-out infinite;
+        }
 
+        /* ボタン等のタップハイライトを消す */
         * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="h-[100dvh] bg-slate-50 text-slate-800 flex flex-col font-sans relative overflow-hidden">
 
-    <!-- ソースコード保護 -->
+    <!-- ソースコード保護・不正操作防止用スクリプト -->
     <script>
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
@@ -67,33 +112,42 @@
     <!-- ◯❌アニメーション表示用オーバーレイ -->
     <div id="mark-overlay" class="fixed inset-0 z-50 pointer-events-none hidden items-center justify-center bg-white/30 backdrop-blur-sm"></div>
 
-    <!-- 演出用レイヤー -->
+    <!-- 演出用レイヤー（JSで表示切替） -->
     <div id="effect-layer" class="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+        <!-- 左下から飛び出すキャラ -->
         <div class="absolute bottom-[70px] md:bottom-[90px] -left-4 text-[6rem] md:text-[10rem] animate-left-pop drop-shadow-xl origin-bottom-left">
             <div class="relative inline-block">
                 🦀
-                <div class="absolute top-[35%] right-[2%] bg-yellow-400 text-slate-800 text-[0.12em] font-black px-[0.3em] py-[0.2em] border-[0.02em] border-yellow-600 rounded-[0.1em] shadow-sm rotate-[15deg] leading-none whitespace-nowrap tracking-tighter">ご当地</div>
+                <!-- 演出タグ（デモ用） -->
+                <div class="absolute top-[35%] right-[2%] bg-yellow-400 text-slate-800 text-[0.12em] font-black px-[0.3em] py-[0.2em] border-[0.02em] border-yellow-600 rounded-[0.1em] shadow-sm rotate-[15deg] leading-none whitespace-nowrap tracking-tighter">
+                    ご当地
+                </div>
             </div>
         </div>
+        <!-- 右下から飛び出すキャラ -->
         <div class="absolute bottom-[70px] md:bottom-[90px] -right-4 text-[6rem] md:text-[10rem] animate-right-pop drop-shadow-xl origin-bottom-right">
             🦖
         </div>
     </div>
 
-    <!-- 広告枠（上部） -->
+    <!-- 広告枠（上部）: JSで動的に表示 -->
     <div id="ad-top-wrapper" class="w-full bg-white border-b border-slate-200 py-2 px-4 flex justify-center shadow-sm z-40 shrink-0 hidden">
-        <div id="ad-top-container" class="w-full max-w-3xl flex justify-center items-center"></div>
+        <div id="ad-top-container" class="w-full max-w-3xl flex justify-center items-center">
+            <!-- 広告がここに入る -->
+        </div>
     </div>
 
-    <!-- メインコンテンツ描画エリア -->
+    <!-- アプリメインコンテンツ描画エリア: ここだけがスクロールする -->
     <main id="app-root" class="flex-1 flex flex-col w-full z-10 relative overflow-y-auto"></main>
 
-    <!-- 広告枠（下部） -->
+    <!-- 広告枠（下部）: JSで動的に表示 -->
     <div id="ad-bottom-wrapper" class="w-full bg-white border-t border-slate-200 py-2 px-4 flex justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 shrink-0 mt-auto hidden">
-        <div id="ad-bottom-container" class="w-full max-w-3xl flex justify-center items-center"></div>
+        <div id="ad-bottom-container" class="w-full max-w-3xl flex justify-center items-center">
+            <!-- 広告がここに入る -->
+        </div>
     </div>
 
-    <!-- アプリケーションロジック（🔥 Firestore連携版に進化！） -->
+    <!-- アプリケーションロジック -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
@@ -117,7 +171,7 @@
         // ★空っぽのクイズデータ（起動時にFirestoreからすべて読み込みます）
         let QUIZ_DATA = [];
 
-        // サウンド再生の準備
+        // サウンド再生の準備（Web Audio API）
         let audioCtx;
         let isAudioInitialized = false;
 
@@ -139,6 +193,7 @@
             }
         }
 
+        // ★ 音の演出を大幅にパワーアップしました
         function playSound(type) {
             if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -149,24 +204,48 @@
             gainNode.connect(audioCtx.destination);
             
             if (type === 'correct') {
+                // クイズ番組風の綺麗な「ピン・ポン♪」
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-                oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1); 
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                
+                // 1音目: ピン (B5)
+                oscillator.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+
+                // 2音目: ポン (G5)
+                oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.25);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
                 oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 0.4);
+                oscillator.stop(audioCtx.currentTime + 0.6);
             } else {
-                oscillator.type = 'triangle';
-                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
-                oscillator.frequency.setValueAtTime(120, audioCtx.currentTime + 0.2);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                // なにくそ！と思わせるバラエティ番組風の「ブッ・ブー！！」
+                oscillator.type = 'sawtooth'; // ギザギザした少し不快な波形
+                
+                // 低く鈍い音（130Hz近辺）
+                oscillator.frequency.setValueAtTime(130, audioCtx.currentTime);
+                
+                // 1回目の「ブッ」
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.12);
+                
+                // 短い無音の隙間
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.15);
+
+                // 2回目の「ブー！」（少し長めに響かせて、最後にピッチを下げる＝脱力感）
+                gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.18);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.6); // 音が下がる
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
                 oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 0.3);
+                oscillator.stop(audioCtx.currentTime + 0.6);
             }
         }
 
+        // ◯❌アニメーション表示
         function showMark(isCorrect) {
             const markContainer = document.getElementById('mark-overlay');
             if (!markContainer) return;
@@ -178,6 +257,7 @@
             markContainer.classList.remove('hidden');
             markContainer.classList.add('flex');
             
+            // 1秒後に非表示
             setTimeout(() => {
                 markContainer.classList.add('hidden');
                 markContainer.classList.remove('flex');
@@ -185,6 +265,7 @@
             }, 1000);
         }
 
+        // SVGアイコンデータ
         const ICONS = {
             Map: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>`,
             BookOpen: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`,
@@ -575,33 +656,6 @@
                 msgEl.classList.add('hidden');
                 msgEl.classList.remove('block');
             }, 3000);
-        }
-
-        function saveLinksToStorage() {
-            localStorage.setItem('fukui_quiz_custom_links', JSON.stringify(customLinks));
-        }
-
-        window.addLink = function() {
-            const title = document.getElementById('new-link-title').value.trim();
-            const url = document.getElementById('new-link-url').value.trim();
-            const desc = document.getElementById('new-link-desc').value.trim();
-
-            if (!title || !url) {
-                alert('サイト名とURLは入力必須です！');
-                return;
-            }
-
-            customLinks.push({ title, url, desc });
-            saveLinksToStorage();
-            renderAdmin();
-        };
-
-        window.deleteLink = function(index) {
-            if (confirm('このリンクを削除してもよろしいですか？')) {
-                customLinks.splice(index, 1);
-                saveLinksToStorage();
-                renderAdmin();
-            }
         };
 
         // --- 画面レンダリング関数群 ---
@@ -619,10 +673,11 @@
                     </div>
                 `;
             } else {
+                 // ★ ランキング参加ボタンを少し小さく変更
                  profileHtml = `
                     <div class="absolute top-4 right-4">
-                        <button onclick="window.setMode('profile')" class="flex items-center gap-1 bg-yellow-300 border-2 border-slate-800 px-3 py-1.5 rounded-full shadow-[2px_2px_0_0_#1e293b] text-sm font-bold text-slate-800 hover:bg-yellow-400 active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all">
-                            <span class="w-4 h-4">${ICONS.User}</span> ランキングに参加
+                        <button onclick="window.setMode('profile')" class="flex items-center gap-1 bg-yellow-300 border-2 border-slate-800 px-2 py-1 rounded-full shadow-[2px_2px_0_0_#1e293b] text-xs font-bold text-slate-800 hover:bg-yellow-400 active:translate-y-[2px] active:translate-x-[2px] active:shadow-none transition-all">
+                            <span class="w-3 h-3">${ICONS.User}</span> ランキングに参加
                         </button>
                     </div>
                 `;
@@ -636,6 +691,7 @@
                         <h2 class="text-xl md:text-2xl font-bold text-red-600 tracking-wider">
                             ＼ 地元民しか解けない！？ ／
                         </h2>
+                        <!-- タイトルにソリッドな影を追加してポップに強調 -->
                         <h1 class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]" style="text-shadow: 3px 3px 0 #e2e8f0;">
                             福井県民<br />
                             <span class="text-blue-600">ショー</span>
@@ -784,8 +840,10 @@
                 let btnClass = "p-4 md:p-5 text-left rounded-xl border-2 transition-all duration-100 text-base md:text-lg font-bold w-full ";
                 
                 if (!isAnswered) {
+                    // 通常時：ソリッドシャドウ付きで押せるボタン
                     btnClass += "bg-white border-slate-800 text-slate-800 shadow-[4px_4px_0_0_#1e293b] hover:bg-slate-50 active:translate-y-[4px] active:translate-x-[4px] active:shadow-none cursor-pointer";
                 } else {
+                    // 回答後
                     if (option === question.answer) {
                         btnClass += "bg-emerald-100 border-emerald-600 text-emerald-900 shadow-none translate-y-[4px] translate-x-[4px]"; 
                     } else if (option === selectedOption) {
@@ -847,6 +905,7 @@
             let html = `
             <div class="flex-1 flex flex-col items-center justify-start p-6 w-full relative animate-fade-in pb-20 z-10">
                 <div class="max-w-2xl w-full">
+                    <!-- メイン結果カード -->
                     <div class="bg-white border-4 border-slate-800 rounded-3xl p-8 md:p-10 text-center relative shadow-[8px_8px_0_0_#1e293b] mb-10">
                         <div class="absolute inset-0 flex justify-center items-center opacity-[0.03] pointer-events-none">
                             <div class="w-96 h-96 text-blue-900">${ICONS.Trophy}</div>
@@ -891,6 +950,7 @@
                         </div>
                     </div>`;
 
+            // 不正解だった問題の解説エリアを追加
             if (wrongAnswers.length > 0) {
                 html += `
                     <div class="w-full">
@@ -1125,7 +1185,8 @@
                         <p class="text-slate-600 font-bold mb-6">各都道府県の魅力をもっと知りたい方は、以下のサイトもぜひチェックしてみてください！</p>
             `;
 
-            if (linksTopAd.trim()) {
+            // リンク集専用 上部広告
+            if (linksTopAd.trim() !== '') {
                 html += `<div class="mb-6 flex justify-center w-full overflow-hidden">${linksTopAd}</div>`;
             }
                         
@@ -1151,7 +1212,8 @@
                         </div>
             `;
 
-            if (linksBottomAd.trim()) {
+            // リンク集専用 下部広告
+            if (linksBottomAd.trim() !== '') {
                 html += `<div class="mt-8 flex justify-center w-full overflow-hidden">${linksBottomAd}</div>`;
             }
             
@@ -1172,9 +1234,11 @@
             appRoot.innerHTML = html;
         }
 
+        // --- 追加：管理者用 アフィリエイト広告設定画面 ---
         function renderAdmin() {
             window.scrollTo(0, 0);
             
+            // 現在保存されている広告タグを取得
             const currentTopAd = localStorage.getItem('fukui_quiz_ad_top') || '';
             const currentBottomAd = localStorage.getItem('fukui_quiz_ad_bottom') || '';
 
@@ -1191,7 +1255,8 @@
                             <h2 class="text-2xl md:text-3xl font-black text-slate-800">広告・管理者設定</h2>
                         </div>
                         
-                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">アフィリエイト広告設定</h3>
+                        <!-- 広告設定セクション -->
+                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">アプリ共通 広告設定</h3>
                         <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-xl mb-6 shadow-sm">
                             <h3 class="font-black text-yellow-900 text-sm mb-2 flex items-center gap-1">⚠️ アフィリエイトタグに関する注意</h3>
                             <p class="font-bold text-yellow-800 text-xs leading-relaxed">
@@ -1212,6 +1277,7 @@
                             </div>
                         </div>
 
+                        <!-- リンク集専用 広告設定セクション -->
                         <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-pink-500 pl-3">リンク集ページ専用 広告設定</h3>
                         <p class="font-bold text-slate-600 text-sm mb-4">リンク集のページの上下に表示する専用の広告枠です。</p>
                         
@@ -1234,9 +1300,11 @@
                             <div id="ad-result-message" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
                         </div>
 
-                        <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-emerald-500 pl-3">ご当地リンク集の管理</h3>
+                        <!-- リンク集管理セクション -->
+                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-emerald-500 pl-3">ご当地リンク集の管理</h3>
                         <p class="font-bold text-slate-600 text-sm mb-4">お問い合わせで依頼があった相互リンクなどは、ここから追加・管理できます。</p>
                         
+                        <!-- 現在のリンク一覧 -->
                         <div class="space-y-3 mb-6">
             `;
 
@@ -1261,6 +1329,7 @@
             html += `
                         </div>
 
+                        <!-- 新規リンク追加フォーム -->
                         <div class="bg-emerald-50 border-2 border-emerald-200 p-5 rounded-xl space-y-4 shadow-sm">
                             <h4 class="font-black text-emerald-800 text-sm mb-2">＋ 新しいリンクを追加</h4>
                             <div>
@@ -1279,6 +1348,7 @@
             appRoot.innerHTML = html;
         }
 
+        // --- お問い合わせ画面（GAS連携 カスタムフォーム版） ---
         function renderContact() {
             window.scrollTo(0, 0);
 
@@ -1295,6 +1365,7 @@
                             <h2 class="text-xl md:text-3xl font-black text-slate-800">福井県民ショー<br class="md:hidden"/> お問い合わせ</h2>
                         </div>
                         
+                        <!-- 案内メッセージ -->
                         <div class="bg-yellow-50 border-2 border-yellow-400 p-5 rounded-xl mb-8 shadow-sm">
                             <h3 class="font-black text-yellow-900 text-lg mb-3 flex items-center gap-2">
                                 <span>💡</span> 各自治体・お店などの皆様へ
@@ -1306,22 +1377,27 @@
                                 <p class="font-bold text-slate-700 text-sm leading-relaxed">
                                     お問い合わせありがとうございます。<br>
                                     当クイズサイトに関しては、もしよければリンクしていただければと思います。<br><br>
-                                    当サイトにリンクをご希望の方は、HPやInstagram、HPのタイトルなどを以下のフォームよりお申し出ください。
+                                    当サイトにリンクをご希望の方は、HPやInstagram、HPのタイトルなどを以下のフォームよりお申し出ください。<br><br>
+                                    <span class="text-slate-500 text-xs">※基本各都道府県でご活躍されております自治体、お店とさせていただきますが、相互リンクさせていただきました場合はリンク対象とさせていただく場合がございます。</span>
                                 </p>
                             </div>
                         </div>
 
+                        <!-- カスタムフォーム本体 -->
                         <form id="contactForm" class="space-y-6">
+                            <!-- 質問項目1: お名前 -->
                             <div>
                                 <label for="name" class="block text-sm font-black text-slate-800 mb-2">お名前 / 団体名 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
                             </div>
                             
+                            <!-- 質問項目2: メールアドレス -->
                             <div>
                                 <label for="email" class="block text-sm font-black text-slate-800 mb-2">メールアドレス <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
                             </div>
 
+                            <!-- 質問項目3: お問い合わせ種別 -->
                             <div>
                                 <label for="inquiryType" class="block text-sm font-black text-slate-800 mb-2">お問い合わせ種別 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <div class="relative">
@@ -1337,6 +1413,7 @@
                                 </div>
                             </div>
 
+                            <!-- 相互リンク情報 -->
                             <div class="border-t-2 border-slate-200 pt-6 mt-6 bg-blue-50 p-5 rounded-2xl border-2 border-blue-200">
                                 <h4 class="font-black text-blue-800 text-sm flex items-center gap-2 mb-4">
                                     <div class="w-4 h-4">${ICONS.Link}</div>
@@ -1361,18 +1438,22 @@
                                 </div>
                             </div>
 
+                            <!-- その他内容 -->
                             <div class="border-t-2 border-slate-200 pt-6 mt-6">
                                 <label for="message" class="block text-sm font-black text-slate-800 mb-2">その他お問い合わせ内容・ご要望など <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
                                 <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all resize-none"></textarea>
                             </div>
 
+                            <!-- 送信ボタン -->
                             <div class="pt-4 text-center">
                                 <button type="submit" id="submitBtn" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg flex items-center justify-center gap-2 mx-auto">
                                     <span id="btnText">送信する</span>
+                                    <!-- スピナー（TailwindとSVGでよりモダンに） -->
                                     <svg id="btnSpinner" class="animate-spin -mr-1 ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 </button>
                             </div>
                             
+                            <!-- メッセージ表示エリア -->
                             <div id="resultMessage" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
                         </form>
                     </div>
@@ -1381,24 +1462,29 @@
             
             appRoot.innerHTML = html;
 
+            // --- GAS動的送信ロジックの追加 ---
             const form = document.getElementById('contactForm');
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
             const resultMessage = document.getElementById('resultMessage');
 
-            // ⚠️ GASのウェブアプリURL
+            // ==========================================
+            // ⚠️ 【重要】ここにGASでデプロイしたWebアプリのURLを貼り付けます
+            // ==========================================
             const GAS_WEB_APP_URL = 'ここにウェブアプリのURLを貼り付けてください';
 
             form.addEventListener('submit', async (e) => {
-                e.preventDefault(); 
+                e.preventDefault(); // 通常の送信（画面遷移）をキャンセル
 
                 if(GAS_WEB_APP_URL === 'ここにウェブアプリのURLを貼り付けてください') {
                     alert('GASのウェブアプリURLが設定されていません。コード（GAS_WEB_APP_URL）を修正してください。');
                     return;
                 }
 
+                // UIを送信中状態に変更
                 submitBtn.disabled = true;
+                // ネオブルータリズムの「押された状態」をCSSで固定する
                 submitBtn.classList.add('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
                 btnText.textContent = '送信中...';
                 btnSpinner.classList.remove('hidden');
@@ -1430,6 +1516,7 @@
                     resultMessage.textContent = '❌ エラーが発生しました。時間をおいて再度お試しください。';
                     resultMessage.className = 'mt-4 text-center font-bold text-red-800 bg-red-50 border-red-500 p-4 rounded-xl border-2';
                 } finally {
+                    // UIを元に戻す
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
                     btnText.textContent = '送信する';
