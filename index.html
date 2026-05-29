@@ -635,27 +635,56 @@
             saveScoreToFirestore(pointsToAdd);
         }
 
-        window.saveAds = function() {
+        window.saveSettings = function() {
             const topAd = document.getElementById('top-ad-input').value;
             const bottomAd = document.getElementById('bottom-ad-input').value;
             const linksTopAd = document.getElementById('links-top-ad-input').value;
             const linksBottomAd = document.getElementById('links-bottom-ad-input').value;
+            const gasUrl = document.getElementById('gas-url-input').value.trim();
             
             localStorage.setItem('fukui_quiz_ad_top', topAd);
             localStorage.setItem('fukui_quiz_ad_bottom', bottomAd);
             localStorage.setItem('fukui_quiz_links_ad_top', linksTopAd);
             localStorage.setItem('fukui_quiz_links_ad_bottom', linksBottomAd);
+            localStorage.setItem('fukui_quiz_gas_url', gasUrl);
             
             loadAds();
             
             const msgEl = document.getElementById('ad-result-message');
-            msgEl.innerHTML = '✅ 広告設定を保存し、アプリに反映しました！';
+            msgEl.innerHTML = '✅ 管理者設定を保存し、アプリに反映しました！';
             msgEl.className = 'mt-4 text-center font-bold text-emerald-800 bg-emerald-50 border-emerald-500 p-4 rounded-xl border-2 block';
             
             setTimeout(() => {
                 msgEl.classList.add('hidden');
                 msgEl.classList.remove('block');
             }, 3000);
+        }
+
+        function saveLinksToStorage() {
+            localStorage.setItem('fukui_quiz_custom_links', JSON.stringify(customLinks));
+        }
+
+        window.addLink = function() {
+            const title = document.getElementById('new-link-title').value.trim();
+            const url = document.getElementById('new-link-url').value.trim();
+            const desc = document.getElementById('new-link-desc').value.trim();
+
+            if (!title || !url) {
+                alert('サイト名とURLは入力必須です！');
+                return;
+            }
+
+            customLinks.push({ title, url, desc });
+            saveLinksToStorage();
+            renderAdmin();
+        };
+
+        window.deleteLink = function(index) {
+            if (confirm('このリンクを削除してもよろしいですか？')) {
+                customLinks.splice(index, 1);
+                saveLinksToStorage();
+                renderAdmin();
+            }
         };
 
         // --- 画面レンダリング関数群 ---
@@ -691,7 +720,6 @@
                         <h2 class="text-xl md:text-2xl font-bold text-red-600 tracking-wider">
                             ＼ 地元民しか解けない！？ ／
                         </h2>
-                        <!-- タイトルにソリッドな影を追加してポップに強調 -->
                         <h1 class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]" style="text-shadow: 3px 3px 0 #e2e8f0;">
                             福井県民<br />
                             <span class="text-blue-600">ショー</span>
@@ -840,10 +868,8 @@
                 let btnClass = "p-4 md:p-5 text-left rounded-xl border-2 transition-all duration-100 text-base md:text-lg font-bold w-full ";
                 
                 if (!isAnswered) {
-                    // 通常時：ソリッドシャドウ付きで押せるボタン
                     btnClass += "bg-white border-slate-800 text-slate-800 shadow-[4px_4px_0_0_#1e293b] hover:bg-slate-50 active:translate-y-[4px] active:translate-x-[4px] active:shadow-none cursor-pointer";
                 } else {
-                    // 回答後
                     if (option === question.answer) {
                         btnClass += "bg-emerald-100 border-emerald-600 text-emerald-900 shadow-none translate-y-[4px] translate-x-[4px]"; 
                     } else if (option === selectedOption) {
@@ -905,7 +931,6 @@
             let html = `
             <div class="flex-1 flex flex-col items-center justify-start p-6 w-full relative animate-fade-in pb-20 z-10">
                 <div class="max-w-2xl w-full">
-                    <!-- メイン結果カード -->
                     <div class="bg-white border-4 border-slate-800 rounded-3xl p-8 md:p-10 text-center relative shadow-[8px_8px_0_0_#1e293b] mb-10">
                         <div class="absolute inset-0 flex justify-center items-center opacity-[0.03] pointer-events-none">
                             <div class="w-96 h-96 text-blue-900">${ICONS.Trophy}</div>
@@ -950,7 +975,6 @@
                         </div>
                     </div>`;
 
-            // 不正解だった問題の解説エリアを追加
             if (wrongAnswers.length > 0) {
                 html += `
                     <div class="w-full">
@@ -1185,8 +1209,7 @@
                         <p class="text-slate-600 font-bold mb-6">各都道府県の魅力をもっと知りたい方は、以下のサイトもぜひチェックしてみてください！</p>
             `;
 
-            // リンク集専用 上部広告
-            if (linksTopAd.trim() !== '') {
+            if (linksTopAd.trim()) {
                 html += `<div class="mb-6 flex justify-center w-full overflow-hidden">${linksTopAd}</div>`;
             }
                         
@@ -1212,8 +1235,7 @@
                         </div>
             `;
 
-            // リンク集専用 下部広告
-            if (linksBottomAd.trim() !== '') {
+            if (linksBottomAd.trim()) {
                 html += `<div class="mt-8 flex justify-center w-full overflow-hidden">${linksBottomAd}</div>`;
             }
             
@@ -1234,13 +1256,12 @@
             appRoot.innerHTML = html;
         }
 
-        // --- 追加：管理者用 アフィリエイト広告設定画面 ---
         function renderAdmin() {
             window.scrollTo(0, 0);
             
-            // 現在保存されている広告タグを取得
             const currentTopAd = localStorage.getItem('fukui_quiz_ad_top') || '';
             const currentBottomAd = localStorage.getItem('fukui_quiz_ad_bottom') || '';
+            const currentGasUrl = localStorage.getItem('fukui_quiz_gas_url') || '';
 
             let html = `
             <div class="flex-1 p-6 w-full animate-fade-in relative z-10">
@@ -1255,8 +1276,16 @@
                             <h2 class="text-2xl md:text-3xl font-black text-slate-800">広告・管理者設定</h2>
                         </div>
                         
-                        <!-- 広告設定セクション -->
-                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">アプリ共通 広告設定</h3>
+                        <h3 class="text-xl font-black text-slate-800 mt-6 mb-4 border-l-4 border-purple-500 pl-3">お問い合わせシステム（GAS）設定</h3>
+                        <p class="font-bold text-slate-600 text-sm mb-4">お問い合わせフォームからメールを送信するための「GASウェブアプリURL」を設定します。</p>
+                        <div class="space-y-6 mb-10">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 mb-2">GASウェブアプリURL</label>
+                                <input type="text" id="gas-url-input" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold text-sm transition-all placeholder:text-slate-400" value="${currentGasUrl}" placeholder="https://script.google.com/macros/s/.../exec">
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">アフィリエイト広告設定</h3>
                         <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-xl mb-6 shadow-sm">
                             <h3 class="font-black text-yellow-900 text-sm mb-2 flex items-center gap-1">⚠️ アフィリエイトタグに関する注意</h3>
                             <p class="font-bold text-yellow-800 text-xs leading-relaxed">
@@ -1277,7 +1306,6 @@
                             </div>
                         </div>
 
-                        <!-- リンク集専用 広告設定セクション -->
                         <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-pink-500 pl-3">リンク集ページ専用 広告設定</h3>
                         <p class="font-bold text-slate-600 text-sm mb-4">リンク集のページの上下に表示する専用の広告枠です。</p>
                         
@@ -1294,17 +1322,15 @@
                         </div>
 
                         <div class="pt-2 text-center border-b-2 border-slate-200 pb-8">
-                            <button onclick="window.saveAds()" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg mx-auto">
-                                全ての広告設定を保存する
+                            <button onclick="window.saveSettings()" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg mx-auto">
+                                全ての設定を保存する
                             </button>
                             <div id="ad-result-message" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
                         </div>
 
-                        <!-- リンク集管理セクション -->
-                        <h3 class="text-xl font-black text-slate-800 mb-4 border-l-4 border-emerald-500 pl-3">ご当地リンク集の管理</h3>
+                        <h3 class="text-xl font-black text-slate-800 mt-10 mb-4 border-l-4 border-emerald-500 pl-3">ご当地リンク集の管理</h3>
                         <p class="font-bold text-slate-600 text-sm mb-4">お問い合わせで依頼があった相互リンクなどは、ここから追加・管理できます。</p>
                         
-                        <!-- 現在のリンク一覧 -->
                         <div class="space-y-3 mb-6">
             `;
 
@@ -1329,7 +1355,6 @@
             html += `
                         </div>
 
-                        <!-- 新規リンク追加フォーム -->
                         <div class="bg-emerald-50 border-2 border-emerald-200 p-5 rounded-xl space-y-4 shadow-sm">
                             <h4 class="font-black text-emerald-800 text-sm mb-2">＋ 新しいリンクを追加</h4>
                             <div>
@@ -1348,7 +1373,6 @@
             appRoot.innerHTML = html;
         }
 
-        // --- お問い合わせ画面（GAS連携 カスタムフォーム版） ---
         function renderContact() {
             window.scrollTo(0, 0);
 
@@ -1365,7 +1389,6 @@
                             <h2 class="text-xl md:text-3xl font-black text-slate-800">福井県民ショー<br class="md:hidden"/> お問い合わせ</h2>
                         </div>
                         
-                        <!-- 案内メッセージ -->
                         <div class="bg-yellow-50 border-2 border-yellow-400 p-5 rounded-xl mb-8 shadow-sm">
                             <h3 class="font-black text-yellow-900 text-lg mb-3 flex items-center gap-2">
                                 <span>💡</span> 各自治体・お店などの皆様へ
@@ -1378,26 +1401,21 @@
                                     お問い合わせありがとうございます。<br>
                                     当クイズサイトに関しては、もしよければリンクしていただければと思います。<br><br>
                                     当サイトにリンクをご希望の方は、HPやInstagram、HPのタイトルなどを以下のフォームよりお申し出ください。<br><br>
-                                    <span class="text-slate-500 text-xs">※基本各都道府県でご活躍されております自治体、お店とさせていただきますが、相互リンクさせていただきました場合はリンク対象とさせていただく場合がございます。</span>
                                 </p>
                             </div>
                         </div>
 
-                        <!-- カスタムフォーム本体 -->
                         <form id="contactForm" class="space-y-6">
-                            <!-- 質問項目1: お名前 -->
                             <div>
                                 <label for="name" class="block text-sm font-black text-slate-800 mb-2">お名前 / 団体名 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
                             </div>
                             
-                            <!-- 質問項目2: メールアドレス -->
                             <div>
                                 <label for="email" class="block text-sm font-black text-slate-800 mb-2">メールアドレス <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all">
                             </div>
 
-                            <!-- 質問項目3: お問い合わせ種別 -->
                             <div>
                                 <label for="inquiryType" class="block text-sm font-black text-slate-800 mb-2">お問い合わせ種別 <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">必須</span></label>
                                 <div class="relative">
@@ -1413,7 +1431,6 @@
                                 </div>
                             </div>
 
-                            <!-- 相互リンク情報 -->
                             <div class="border-t-2 border-slate-200 pt-6 mt-6 bg-blue-50 p-5 rounded-2xl border-2 border-blue-200">
                                 <h4 class="font-black text-blue-800 text-sm flex items-center gap-2 mb-4">
                                     <div class="w-4 h-4">${ICONS.Link}</div>
@@ -1438,22 +1455,18 @@
                                 </div>
                             </div>
 
-                            <!-- その他内容 -->
                             <div class="border-t-2 border-slate-200 pt-6 mt-6">
                                 <label for="message" class="block text-sm font-black text-slate-800 mb-2">その他お問い合わせ内容・ご要望など <span class="bg-slate-400 text-white text-[10px] px-2 py-0.5 rounded ml-1 align-middle">任意</span></label>
                                 <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-xl border-2 border-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 font-bold transition-all resize-none"></textarea>
                             </div>
 
-                            <!-- 送信ボタン -->
                             <div class="pt-4 text-center">
                                 <button type="submit" id="submitBtn" class="w-full md:w-auto min-w-[240px] py-4 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black border-2 border-slate-800 shadow-[4px_4px_0_0_#1e293b] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none transition-all text-lg flex items-center justify-center gap-2 mx-auto">
                                     <span id="btnText">送信する</span>
-                                    <!-- スピナー（TailwindとSVGでよりモダンに） -->
                                     <svg id="btnSpinner" class="animate-spin -mr-1 ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 </button>
                             </div>
                             
-                            <!-- メッセージ表示エリア -->
                             <div id="resultMessage" class="mt-4 text-center font-bold hidden rounded-xl p-4 border-2"></div>
                         </form>
                     </div>
@@ -1462,29 +1475,24 @@
             
             appRoot.innerHTML = html;
 
-            // --- GAS動的送信ロジックの追加 ---
             const form = document.getElementById('contactForm');
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnSpinner = document.getElementById('btnSpinner');
             const resultMessage = document.getElementById('resultMessage');
 
-            // ==========================================
-            // ⚠️ 【重要】ここにGASでデプロイしたWebアプリのURLを貼り付けます
-            // ==========================================
-            const GAS_WEB_APP_URL = 'ここにウェブアプリのURLを貼り付けてください';
+            // ⚠️ GASのウェブアプリURL（管理画面から設定したものを読み込む）
+            const GAS_WEB_APP_URL = localStorage.getItem('fukui_quiz_gas_url') || '';
 
             form.addEventListener('submit', async (e) => {
-                e.preventDefault(); // 通常の送信（画面遷移）をキャンセル
+                e.preventDefault(); 
 
-                if(GAS_WEB_APP_URL === 'ここにウェブアプリのURLを貼り付けてください') {
-                    alert('GASのウェブアプリURLが設定されていません。コード（GAS_WEB_APP_URL）を修正してください。');
+                if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'ここにウェブアプリのURLを貼り付けてください') {
+                    alert('管理画面（⚙️）からGASのウェブアプリURLを設定してください。');
                     return;
                 }
 
-                // UIを送信中状態に変更
                 submitBtn.disabled = true;
-                // ネオブルータリズムの「押された状態」をCSSで固定する
                 submitBtn.classList.add('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
                 btnText.textContent = '送信中...';
                 btnSpinner.classList.remove('hidden');
@@ -1516,7 +1524,6 @@
                     resultMessage.textContent = '❌ エラーが発生しました。時間をおいて再度お試しください。';
                     resultMessage.className = 'mt-4 text-center font-bold text-red-800 bg-red-50 border-red-500 p-4 rounded-xl border-2';
                 } finally {
-                    // UIを元に戻す
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-70', 'cursor-not-allowed', 'shadow-none', 'translate-y-[4px]', 'translate-x-[4px]');
                     btnText.textContent = '送信する';
